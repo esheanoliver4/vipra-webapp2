@@ -274,22 +274,26 @@ INSERT INTO public.users (
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Users can view their own profile
+-- Replace lines 277-292 with this:
+
+-- Policy: Users can view their own profile
 CREATE POLICY "Users can view own profile"
   ON public.users FOR SELECT
-  USING (auth.uid()::text = id::text OR role = 'admin');
+  USING (auth.uid() = id OR role = 'admin');
 
 -- Policy: Users can update their own profile
 CREATE POLICY "Users can update own profile"
   ON public.users FOR UPDATE
-  USING (auth.uid()::text = id::text)
-  WITH CHECK (auth.uid()::text = id::text);
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
 
 -- Policy: Only admins can approve users
 CREATE POLICY "Only admins can approve"
   ON public.users FOR UPDATE
   USING (
-    (SELECT role FROM public.users WHERE id = auth.uid()::text) = 'admin'
+    (SELECT role FROM public.users WHERE id = auth.uid()) = 'admin'
   );
+
 
 -- ============================================================================
 -- MIGRATION COMPLETE

@@ -1,0 +1,335 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model based on the User interface in lib/data.ts
+model User {
+  id                     String   @id @default(uuid())
+  name                   String
+  email                  String   @unique
+  password               String // Encrypted password (optional for now)
+  role                   String   @default("user") // user, admin
+  first_name             String?
+  last_name              String?
+  profile_pic            String? // URL of the profile picture (primary/display picture)
+  profile_photo          String? // Alias for profile_pic used in some parts of the app
+  profile_images         String? // JSON array of additional profile image URLs
+  gotra                  String?
+  current_practiced_gotra String?
+  dob                    DateTime // date of birth
+  time_of_birth          String?
+  place_of_birth         String
+  religion               String?
+  caste                  String?
+  // Address fields for place of birth
+  address                String?   // Full constructed address
+  birth_street           String?
+  birth_landmark          String?
+  birth_district         String?
+  birth_city              String?
+  birth_state             String?
+  birth_country           String?  @default("India")
+  birth_pincode           String?
+  birth_latitude          Float?
+  birth_longitude         Float?
+  birth_timezone          String?
+  aadhaar_number          String?
+  digi_pin               String?
+  profile_id             String?  @unique // show aadhaar when user views own profile (never shown to others)
+  show_mobile_public      Boolean  @default(false)
+  show_email_public       Boolean  @default(false)
+  show_photo_public       Boolean  @default(true)
+  current_address        String?   // legacy / full current address line
+  current_pincode        String?  // pin code of current address
+  current_address_line1  String?
+  current_address_line2  String?
+  current_city           String?
+  current_state          String?
+  current_country        String?
+  current_district       String?
+  gender                 String
+  gender_locked          Boolean  @default(false) // Once selected, cannot be changed
+  father_name            String
+  mother_name            String
+  profession             String
+  education              String
+  company_working_at     String?
+  school_name            String?
+  college_name           String?
+  hobbies                String?
+  fav_things             String?
+  short_bio              String? // Short bio displayed on dating cards
+  siblings               Int
+  parents_contact_number String?
+  marital_status         String
+  mother_tongue          String
+  age                    Int
+  city                   String
+  nri                    String? // yes | no
+  disability             String? // yes | no
+  payment_id             String? // Payment/transaction ID
+  status                 String   @default("pending") // pending, approved, rejected
+  payment_status         Boolean  @default(false)
+  is_premium             Boolean  @default(false)
+  premium_plan           String?  // gold, silver, etc.
+  is_verified            Boolean  @default(false)
+  profile_completed      Boolean  @default(false)
+  is_approved            Boolean  @default(false) // User has been approved by admin
+  approval_status        String   @default("pending") // pending, approved, rejected
+  approval_notes         String? // Admin notes for rejection
+  approved_by            String? // Admin ID who approved
+  deactivated_at         DateTime? // When profile was deactivated (1 year after approval)
+  approved_at            DateTime? // When profile was approved/accepted
+  approval_requested_at  DateTime? // When user submitted for approval
+  height                 String? // Height in cm or feet
+  weight                 String? // Weight in kg or pounds
+  family_type            String? // Type of family (joint, nuclear, etc.)
+  languages_known        String? // Languages the user knows
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
+
+  paternal_father_name String?
+  paternal_mother_name String?
+  maternal_father_name String?
+  maternal_mother_name String?
+
+  paternal_village String?
+  maternal_village String?
+
+  blood_group           String?  // e.g. A+, B-, O+
+  hide_profile          Boolean  @default(false) // hide from search/directory
+  hide_number           Boolean  @default(false) // hide contact number from others
+  hide_additional_pics  Boolean  @default(false) // hide extra gallery photos from others
+  house                 String? // House type: Own House (Self Acquired), Own House (Parental), Rented, Leased, Accommodation by Company/Firm, Accommodation by Govt., Others
+
+  // Connection relations
+  sentConnections     Connection[] @relation("SentConnections")
+  receivedConnections Connection[] @relation("ReceivedConnections")
+  
+  // Family relationships
+  familyRelationships FamilyRelationship[]
+  
+  // Profile images
+  profileImages       ProfileImage[]
+  
+  // Approval logs
+  approvalLogs        ApprovalLog[]
+  
+  // Likes/interactions
+  likes               Like[] @relation("UserWhoLikes")
+  likedBy             Like[] @relation("UserWhoIsLiked")
+}
+
+// Connection model for tracking user interests (like a cart/wishlist)
+model Connection {
+  id           String   @id @default(uuid())
+  from_user_id String
+  to_user_id   String
+  created_at   DateTime @default(now())
+
+  // Relations
+  from_user User @relation("SentConnections", fields: [from_user_id], references: [id])
+  to_user   User @relation("ReceivedConnections", fields: [to_user_id], references: [id])
+
+  @@unique([from_user_id, to_user_id])
+}
+
+// FamilyMember model for parents and grandparents
+model FamilyMember {
+  id                String   @id @default(uuid())
+  name              String
+  dob               DateTime? // Date of birth
+  age               Int?
+  place_of_birth    String?
+  place_belongs_to  String? // Village/town they belong to
+  gotra             String?
+  profile_image     String? // URL of profile picture
+  gender            String?
+  marital_status    String?
+  profession        String?
+  education         String? // Education level (same options as User)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  
+  // Relationships
+  relationships     FamilyRelationship[]
+  
+  @@index([name, dob]) // Index for matching queries
+}
+
+// FamilyRelationship model to link users to family members
+model FamilyRelationship {
+  id              String   @id @default(uuid())
+  user_id         String
+  family_member_id String
+  relationship_type String // 'father', 'mother', 'paternal_grandfather', 'paternal_grandmother', 'maternal_grandfather', 'maternal_grandmother'
+  created_at      DateTime @default(now())
+  
+  // Relations
+  user           User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  family_member  FamilyMember @relation(fields: [family_member_id], references: [id], onDelete: Cascade)
+  
+  @@unique([user_id, family_member_id, relationship_type])
+  @@index([user_id])
+  @@index([family_member_id])
+}
+
+// Blog model for admin to post articles
+model Blog {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  content     String   @db.Text
+  excerpt     String?
+  image_url   String?
+  author      String
+  published   Boolean  @default(false)
+  views       Int      @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  
+  @@index([published])
+  @@index([created_at])
+}
+
+// Success Story model
+model SuccessStory {
+  id            String   @id @default(uuid())
+  title         String
+  description   String   @db.Text
+  couple_name   String
+  couple_image  String?
+  story_content String   @db.Text
+  match_date    DateTime?
+  wedding_date  DateTime?
+  published     Boolean  @default(false)
+  featured      Boolean  @default(false)
+  views         Int      @default(0)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  
+  @@index([published])
+  @@index([featured])
+  @@index([created_at])
+}
+
+// Events model
+model Event {
+  id            String   @id @default(uuid())
+  title         String
+  description   String   @db.Text
+  image_url     String?
+  event_date    DateTime
+  location      String
+  registration_link String?
+  published     Boolean  @default(false)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  
+  @@index([published])
+  @@index([event_date])
+}
+
+// News model
+model News {
+  id          String   @id @default(uuid())
+  title       String
+  content     String   @db.Text
+  image_url   String?
+  published   Boolean  @default(false)
+  featured    Boolean  @default(false)
+  views       Int      @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  
+  @@index([published])
+  @@index([featured])
+  @@index([created_at])
+}
+
+// Referral model for tracking referrals
+model Referral {
+  id              String   @id @default(uuid())
+  referrer_id     String
+  referee_id      String?  // Null until referee signs up
+  referral_code   String   @unique
+  commission      Float    @default(0)
+  status          String   @default("pending") // pending, completed, claimed
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  
+  @@index([referrer_id])
+  @@index([referee_id])
+  @@index([status])
+}
+
+// Reward model for tracking user earnings
+model Reward {
+  id              String   @id @default(uuid())
+  user_id         String
+  referral_id     String?
+  amount          Float
+  reward_type     String   // 'referral', 'bonus', 'achievement'
+  description     String?
+  redeemed        Boolean  @default(false)
+  redeemed_at     DateTime?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  
+  @@index([user_id])
+  @@index([redeemed])
+}
+
+// ProfileImage model for multiple photo uploads (max 6)
+model ProfileImage {
+  id          String   @id @default(uuid())
+  user_id     String
+  image_url   String
+  order       Int      @default(0) // Order of image in gallery
+  is_primary  Boolean  @default(false) // First image is primary
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  @@unique([user_id, order])
+  @@index([user_id])
+}
+
+// ApprovalLog model for tracking admin approvals
+model ApprovalLog {
+  id              String   @id @default(uuid())
+  user_id         String
+  admin_id        String? // Admin who approved/rejected
+  status          String  // 'submitted', 'approved', 'rejected', 'resubmitted'
+  notes           String? // Admin notes
+  created_at      DateTime @default(now())
+  
+  user            User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  @@index([user_id])
+  @@index([status])
+  @@index([created_at])
+}
+
+// Like/Match model for interactions
+model Like {
+  id              String   @id @default(uuid())
+  user_id         String   // Who liked
+  liked_user_id   String   // Who was liked
+  action          String   // 'like', 'pass', 'report'
+  created_at      DateTime @default(now())
+  
+  user            User     @relation("UserWhoLikes", fields: [user_id], references: [id], onDelete: Cascade)
+  likedUser       User     @relation("UserWhoIsLiked", fields: [liked_user_id], references: [id], onDelete: Cascade)
+  
+  @@unique([user_id, liked_user_id])
+  @@index([user_id])
+  @@index([liked_user_id])
+  @@index([action])
+}

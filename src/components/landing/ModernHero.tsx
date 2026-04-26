@@ -138,7 +138,7 @@ export default function ModernHero() {
       </div>
 
       {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce hidden md:block">
         <div className="text-primary text-center">
           <p className="text-sm font-semibold mb-2">Scroll to explore</p>
           <svg className="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">

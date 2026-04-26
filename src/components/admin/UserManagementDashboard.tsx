@@ -11,13 +11,14 @@ import { Loader2, Search, CheckCircle, XCircle, Eye, AlertCircle } from 'lucide-
 
 interface User {
   id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   approval_status: string;
   is_approved: boolean;
   created_at: string;
   gender: string;
-  city: string;
+  location_city: string;
   profession?: string;
 }
 
@@ -58,7 +59,8 @@ export default function UserManagementDashboard() {
     if (searchTerm) {
       filtered = filtered.filter(
         (u) =>
-          u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          u.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          u.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           u.email.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -209,10 +211,10 @@ export default function UserManagementDashboard() {
                 ) : (
                   filteredUsers.map((user) => (
                     <TableRow key={user.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                      <TableCell className="font-semibold text-gray-900">{user.name}</TableCell>
+                      <TableCell className="font-semibold text-gray-900">{user.first_name} {user.last_name}</TableCell>
                       <TableCell className="text-gray-600 text-sm">{user.email}</TableCell>
                       <TableCell className="text-gray-600">{user.gender}</TableCell>
-                      <TableCell className="text-gray-600">{user.city}</TableCell>
+                      <TableCell className="text-gray-600">{user.location_city}</TableCell>
                       <TableCell>
                         <Badge
                           className={`${
@@ -276,7 +278,7 @@ export default function UserManagementDashboard() {
               <CardHeader className="bg-gradient-red-pink text-white">
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-2xl">{selectedUser.name}</CardTitle>
+                    <CardTitle className="text-2xl">{selectedUser.first_name} {selectedUser.last_name}</CardTitle>
                     <CardDescription className="text-white/90">{selectedUser.email}</CardDescription>
                   </div>
                   <Button variant="ghost" onClick={() => setSelectedUser(null)} className="text-white">
@@ -292,7 +294,7 @@ export default function UserManagementDashboard() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">City</p>
-                    <p className="font-semibold">{selectedUser.city}</p>
+                    <p className="font-semibold">{selectedUser.location_city}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Profession</p>

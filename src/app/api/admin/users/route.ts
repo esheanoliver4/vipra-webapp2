@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     // Fetch all users with relevant fields
     const { data: users, error } = await supabase
       .from('users')
-      .select('id, name, email, approval_status, is_approved, created_at, gender, city, profession')
+      .select('id, first_name, last_name, email, approval_status, is_approved, created_at, gender, location_city, profession')
       .order('created_at', { ascending: false });
 
     if (error) {

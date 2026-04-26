@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
       motherTongue,
       maritalStatus,
       hobbies,
+      siblings,
     } = await request.json();
 
     // Validate required fields
@@ -41,11 +42,11 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Create user with Supabase Auth
+    // Create user with Supabase Auth (Confirmed automatically)
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: false,
+      email_confirm: true,
     });
 
     if (authError) {
@@ -69,14 +70,25 @@ export async function POST(request: NextRequest) {
           first_name: firstName,
           last_name: lastName,
           gender: gender === 'male' ? 'male' : 'female',
-          gender_locked: false, // Will be locked after first gender selection
-          date_of_birth: dob,
+          gender_locked: false,
+          date_of_birth: dob, // Matches SQL 'date_of_birth'
           role: 'user',
           is_verified: false,
           is_premium: false,
           premium_plan: 'free',
-          approval_status: 'pending', // Waiting for admin approval
+          approval_status: 'pending',
           is_approved: false,
+          marital_status: maritalStatus || 'never_married',
+          location_city: city || '',
+          mother_tongue: motherTongue || '',
+          hobbies: hobbies || '',
+          profession: profession || '',
+          education: education || '',
+          company_working_at: companyWorkingAt || '',
+          father_name: fatherName || '',
+          mother_name: motherName || '',
+          siblings: siblings || 0,
+          parents_contact_number: parentsContactNumber || '',
         },
       ])
       .select()
@@ -90,43 +102,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create profile record
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .insert([
-        {
-          user_id: userData.id,
-          marital_status: maritalStatus || 'never_married',
-          religion: religion || 'brahmin',
-          gotra: gotra || '',
-          caste: caste || '',
-          location_city: city || '',
-          mother_tongue: motherTongue || '',
-          hobbies: hobbies || '',
-          occupation: profession || '',
-          education: education || '',
-          family_type: 'nuclear',
-          looking_for: profileFor || 'marriage',
-        },
-      ])
-      .select()
-      .single();
-
-    if (profileError) {
-      console.error('[v0] Profile creation error:', profileError);
-      // Continue even if profile creation has minor issues
-    }
-
-    // Create kundli record if data provided
-    if (dob && placeOfBirth) {
+    // Create kundli record (Separate table in SQL)
+    if (dob || timeOfBirth || placeOfBirth) {
       const { error: kundliError } = await supabase
         .from('kundlis')
         .insert([
           {
             user_id: userData.id,
-            date_of_birth: dob,
-            time_of_birth: timeOfBirth || null,
-            place_of_birth: placeOfBirth || '',
+            birth_date: dob,
+            birth_time: timeOfBirth || null,
+            birth_place: placeOfBirth || '',
             gotra: gotra || '',
           },
         ]);

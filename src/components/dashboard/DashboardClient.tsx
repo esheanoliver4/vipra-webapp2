@@ -93,53 +93,7 @@ export default function DashboardClient() {
   const initials = `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-blue-50/10 dark:via-blue-950/10 to-background">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <Link href="/" className="flex items-center gap-2 font-bold text-xl hover:scale-105 transition-transform">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
-                <Heart className="w-6 h-6 text-white fill-white" />
-              </div>
-              <span className="hidden sm:inline text-foreground">VipraPariwaar</span>
-            </Link>
-
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={() => router.push('/')} className="hover:bg-primary/10">
-                <Home className="w-4 h-4 mr-2" />
-                Home
-              </Button>
-              <div className="flex items-center gap-3 pl-4 border-l border-border">
-                <Avatar className="h-12 w-12 cursor-pointer border-2 border-primary/20">
-                  <AvatarImage src={user.profile_image_url} alt={user.first_name} />
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white font-bold">{initials}</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <p className="text-sm font-semibold text-foreground">
-                    {user.first_name} {user.last_name}
-                  </p>
-                  {user.is_premium && (
-                    <p className="text-xs text-secondary font-bold flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 fill-current" /> Premium
-                    </p>
-                  )}
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLogout}
-                className="text-destructive hover:bg-destructive/10"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-gradient-to-br from-background via-blue-50/10 dark:via-blue-950/10 to-background pt-8">
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Welcome Section */}

@@ -50,7 +50,19 @@ export default function LoginForm() {
       }
 
       toast.success('Logged in successfully!');
-      router.push('/dashboard');
+      
+      // Fetch user role to determine redirect
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role')
+        .eq('auth_id', user.id)
+        .single();
+
+      if (userData?.role === 'admin') {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error.message || 'Login failed. Please try again.');

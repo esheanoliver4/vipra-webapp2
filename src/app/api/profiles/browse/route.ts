@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     // Get auth user
     const authHeader = request.headers.get('authorization');
     let currentUserId: string | null = null;
+    let currentUserGotra: string | null = null;
 
     if (authHeader) {
       const token = authHeader.replace('Bearer ', '');
@@ -18,10 +19,11 @@ export async function GET(request: NextRequest) {
       if (!authError && authData.user) {
         const { data: user } = await supabase
           .from('users')
-          .select('id')
+          .select('id, gotra')
           .eq('auth_id', authData.user.id)
           .single();
         currentUserId = user?.id || null;
+        currentUserGotra = user?.gotra || null;
       }
     }
 
@@ -46,7 +48,6 @@ export async function GET(request: NextRequest) {
         profession,
         education,
         short_bio,
-        bio,
         religion,
         gotra,
         profile_images:profile_images(
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
 
     // Apply filters
     if (gender) {
-      query = query.neq('gender', gender); // Show opposite gender
+      query = query.eq('gender', gender === 'male' ? 'female' : 'male'); // Show opposite gender
     }
 
     if (city) {
@@ -72,6 +73,11 @@ export async function GET(request: NextRequest) {
     // Exclude current user
     if (currentUserId) {
       query = query.neq('id', currentUserId);
+    }
+
+    // Exclude same Gotra
+    if (currentUserGotra) {
+      query = query.neq('gotra', currentUserGotra);
     }
 
     const { data: profiles, error, count } = await query

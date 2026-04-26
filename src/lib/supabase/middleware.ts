@@ -42,11 +42,36 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // If user is authenticated and trying to access auth routes, redirect to dashboard
-  if (user && isAuthRoute) {
-    const dashboardUrl = request.nextUrl.clone();
-    dashboardUrl.pathname = '/dashboard';
-    return NextResponse.redirect(dashboardUrl);
+  if (user) {
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role, is_approved')
+      .eq('auth_id', user.id)
+      .single();
+
+    // If user is authenticated and trying to access auth routes (login/register), redirect based on role
+    if (isAuthRoute) {
+      const redirectUrl = request.nextUrl.clone();
+      if (userData?.role === 'admin') {
+        redirectUrl.pathname = '/admin/dashboard';
+      } else {
+        redirectUrl.pathname = '/dashboard';
+      }
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // If regular user is not approved, redirect to pending page
+    if (
+      userData?.role !== 'admin' && 
+      !userData?.is_approved && 
+      isProtectedRoute && 
+      pathname !== '/approval-pending' &&
+      pathname !== '/approval-rejected'
+    ) {
+      const pendingUrl = request.nextUrl.clone();
+      pendingUrl.pathname = '/approval-pending';
+      return NextResponse.redirect(pendingUrl);
+    }
   }
 
   return supabaseResponse;

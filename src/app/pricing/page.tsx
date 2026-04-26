@@ -1,6 +1,5 @@
 import PricingComponent from '@/components/pricing/PricingComponent';
 import ModernHeader from '@/components/landing/ModernHeader';
-import ModernFooter from '@/components/landing/ModernFooter';
 
 export const metadata = {
   title: 'Pricing - Viprapariwar',
@@ -12,7 +11,6 @@ export default function PricingPage() {
     <>
       <ModernHeader />
       <PricingComponent />
-      <ModernFooter />
     </>
   );
 }

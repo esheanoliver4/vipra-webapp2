@@ -31,11 +31,10 @@ export async function PUT(request: NextRequest) {
       first_name,
       last_name,
       gender,
-      location_city,
+      city,
       profession,
       education,
       short_bio,
-      bio,
     } = body;
 
     // Get user ID
@@ -59,11 +58,10 @@ export async function PUT(request: NextRequest) {
         first_name,
         last_name,
         gender: user.gender_locked ? undefined : gender,
-        location_city,
+        city,
         profession,
         education,
         short_bio,
-        bio,
         gender_locked: true, // Lock gender after first update
       })
       .eq('id', user.id);

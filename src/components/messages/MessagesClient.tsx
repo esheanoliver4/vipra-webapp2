@@ -82,13 +82,17 @@ export default function MessagesClient() {
     try {
       const { data } = await supabase
         .from('users')
-        .select('id, full_name, profile_photo')
+        .select('*')
         .in('id', userIds);
 
       if (data) {
         const profiles: { [key: string]: UserProfile } = {};
         data.forEach((profile) => {
-          profiles[profile.id] = profile;
+          profiles[profile.id] = {
+            id: profile.id,
+            full_name: profile.full_name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown',
+            profile_photo: profile.profile_photo || profile.profile_pic || profile.profile_image_url || '',
+          };
         });
         setUserProfiles(profiles);
       }

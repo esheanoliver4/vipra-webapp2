@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/client';
 import CardStack, { Profile } from '@/components/cards/CardStack';
 import { toast } from 'sonner';
 import { Filter } from 'lucide-react';
@@ -11,10 +11,7 @@ export default function BrowseClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [gender, setGender] = useState<'male' | 'female' | 'all'>('all');
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createClient();
 
   useEffect(() => {
     fetchProfiles();
@@ -32,28 +29,75 @@ export default function BrowseClient() {
 
       const { data: currentUserProfile } = await supabase
         .from('users')
-        .select('id')
+        .select('*')
         .eq('auth_id', user.id)
         .single();
+
+      if (!currentUserProfile) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Fetch IDs of profiles already interacted with (likes/passes)
+      const { data: likesData, error: likesError } = await supabase
+        .from('likes')
+        .select('*')
+        .eq('user_id', currentUserProfile.id);
+
+      if (likesError) {
+        console.warn('Could not fetch likes (table may not exist yet):', likesError.message);
+      }
+
+      // Fetch IDs of profiles with pending/accepted connection requests
+      const { data: connectionsData1, error: connError1 } = await supabase
+        .from('connections')
+        .select('*')
+        .eq('from_user_id', currentUserProfile.id);
+
+      const { data: connectionsData2, error: connError2 } = await supabase
+        .from('connections')
+        .select('*')
+        .eq('to_user_id', currentUserProfile.id);
+
+      if (connError1 || connError2) {
+        console.warn('Could not fetch connections:', connError1?.message || connError2?.message);
+      }
+
+      const interactedUserIds = new Set<string>();
+      (likesData || []).forEach((i: any) => {
+        const id = i.liked_user_id || i.likedUserId;
+        if (id) interactedUserIds.add(id);
+      });
+      (connectionsData1 || []).forEach((i: any) => {
+        const id = i.to_user_id || i.recipient_id || i.toUserId;
+        if (id) interactedUserIds.add(id);
+      });
+      (connectionsData2 || []).forEach((i: any) => {
+        const id = i.from_user_id || i.initiator_id || i.fromUserId;
+        if (id) interactedUserIds.add(id);
+      });
+
+      const excludeIds = Array.from(interactedUserIds);
+      console.log('[v0] Excluding profiles:', excludeIds);
 
       let query = supabase
         .from('users')
         .select(`
-          id,
-          first_name,
-          last_name,
-          gender,
-          date_of_birth,
-          profile_image_url,
-          profiles!inner (
-            location_city,
-            education,
-            occupation,
-            gotra,
-            religion
+          *,
+          profile_images(
+            image_url,
+            is_primary
           )
         `)
-        .neq('id', currentUserProfile?.id);
+        .neq('id', currentUserProfile.id)
+        .neq('role', 'admin')
+        .eq('is_approved', true);
+
+      // Exclude already interacted profiles
+      if (excludeIds.length > 0) {
+        // Use proper PostgREST syntax for 'in' filter with strings/UUIDs
+        query = query.not('id', 'in', `(${excludeIds.join(',')})`);
+      }
 
       if (gender !== 'all') {
         query = query.eq('gender', gender);
@@ -64,22 +108,29 @@ export default function BrowseClient() {
       if (error) {
         console.error('[v0] Error fetching profiles:', error);
         toast.error('Failed to load profiles');
+        setIsLoading(false);
         return;
       }
 
-      const transformedProfiles: Profile[] = (data || []).map((user: any) => ({
-        id: user.id,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        gender: user.gender,
-        date_of_birth: user.date_of_birth,
-        location_city: user.profiles?.[0]?.location_city || '',
-        profile_image_url: user.profile_image_url,
-        education: user.profiles?.[0]?.education,
-        occupation: user.profiles?.[0]?.occupation,
-        gotra: user.profiles?.[0]?.gotra,
-        religion: user.profiles?.[0]?.religion,
-      }));
+      const transformedProfiles: Profile[] = (data || []).map((user: any) => {
+        // Find primary image or fallback to first image
+        const primaryImage = user.profile_images?.find((img: any) => img.is_primary)?.image_url;
+        const fallbackImage = user.profile_images?.[0]?.image_url || user.profile_image_url || user.profile_pic || '';
+        
+        return {
+          id: user.id,
+          first_name: user.first_name || '',
+          last_name: user.last_name || '',
+          gender: user.gender || '',
+          date_of_birth: user.date_of_birth || user.dob || '',
+          location_city: user.location_city || user.city || '',
+          profile_image_url: primaryImage || fallbackImage,
+          education: user.education || '',
+          occupation: user.profession || user.occupation || '',
+          gotra: user.gotra || '',
+          religion: user.religion || '',
+        };
+      });
 
       setProfiles(transformedProfiles);
       setIsLoading(false);
@@ -101,24 +152,64 @@ export default function BrowseClient() {
         .eq('auth_id', user.id)
         .single();
 
-      await supabase
-        .from('connections')
+      if (!currentUser) return;
+
+      // Record the like
+      const { error } = await supabase
+        .from('likes')
         .insert([
           {
-            initiator_id: currentUser?.id,
-            recipient_id: profileId,
-            status: 'pending',
+            user_id: currentUser.id,
+            liked_user_id: profileId,
+            action: 'like',
           },
         ]);
 
+      if (error) {
+        if (error.code === '23505') {
+          // Unique violation - already liked, ignore
+          return;
+        }
+        throw error;
+      }
+
       toast.success('Profile liked!');
+      
+      // Refresh profiles to remove the liked one (or wait for swipe animation to finish)
+      // fetchProfiles(); 
     } catch (error) {
       console.error('[v0] Like error:', error);
     }
   };
 
-  const handleDislike = (profileId: string) => {
-    console.log('[v0] Profile passed:', profileId);
+  const handleDislike = async (profileId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: currentUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_id', user.id)
+        .single();
+
+      if (!currentUser) return;
+
+      // Record the pass
+      await supabase
+        .from('likes')
+        .insert([
+          {
+            user_id: currentUser.id,
+            liked_user_id: profileId,
+            action: 'pass',
+          },
+        ]);
+
+      console.log('[v0] Profile passed:', profileId);
+    } catch (error) {
+      console.error('[v0] Pass error:', error);
+    }
   };
 
   return (

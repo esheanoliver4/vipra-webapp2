@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
       `
       )
       .eq('is_approved', true)
+      .neq('role', 'admin')
       .order('created_at', { ascending: false });
 
     // Apply filters

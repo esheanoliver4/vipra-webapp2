@@ -25,6 +25,7 @@ export default function Navbar() {
 
   // 3. User Navbar for all dashboard and logged-in features
   const userRoutes = [
+    '/browse',
     '/dashboard', 
     '/messages', 
     '/connections', 

@@ -138,3 +138,31 @@ This document provides a technical and functional record of the standardizations
 - **Prisma Alignment**: Manually synchronized `schema.prisma` with the live Supabase database state, accounting for all custom tables (`BlogPost`, `SubscriptionPlan`, etc.) and refined column types.
 - **Master Migration Script**: Created `FINAL_DATABASE_MIGRATION.sql` in the `/scripts` directory, providing a single, consolidated file to reproduce the entire database schema, including RLS policies and indexes.
 - **Schema Validation**: Verified all column mappings (e.g., `location_city`, `FamilyMember` UUIDs) to ensure absolute consistency between the frontend actions and the database layer.
+
+## 21. Technical Deep-Dive: webapp2 vs. viprafinal1 (The Delta)
+- **Administrative Architecture**:
+    - **New Logic Layer**: Created `src/lib/actions/cms.ts` and `src/lib/actions/admin.ts`. These use `getServiceRoleClient` to bypass RLS for critical management tasks.
+    - **Visual CMS**: Implemented `src/components/admin/CMSClient.tsx`, enabling real-time management of `SubscriptionPlan`, `BlogPost`, and `PlatformSettings` (QR/UPI).
+    - **User Detail Enhancement**: Injected genealogical visibility into `src/app/admin/user/[id]/UserDetailClient.tsx`.
+- **Full-Stack Blog System**:
+    - **Schema**: Introduced relational tables `BlogPost` and `BlogCategory` with UUID linking.
+    - **Frontend**: Created dynamic feed at `src/app/blog/page.tsx` and detail views at `src/app/blog/[slug]/page.tsx`.
+    - **SEO**: Integrated `generateMetadata` for dynamic article titles and OpenGraph previews.
+- **Genealogical & Profile Engine**:
+    - **Family Mapping**: Developed a dedicated `FamilyMember` table and management tab in `EditProfileClient.tsx`.
+    - **UI Polish**: Re-engineered the Profile Editor header to fit 6 management tabs (`Basic`, `Family`, `Career`, `Cultural`, `Family Tree`, `Photos`) on a single row.
+- **Critical Backend Refactoring & Bug Fixes**:
+    - **Registration Flow**: 
+        - Fixed `src/app/api/auth/register/route.ts` to map frontend `city` to DB `location_city`.
+        - Added an **Atomic Cleanup** logic: If the profile creation fails, the script now executes `supabase.auth.admin.deleteUser(userId)` to allow immediate retry with the same email.
+    - **Logout Stability**: Modified `src/lib/actions/auth.ts` to return status objects instead of triggering Next.js internal redirect errors, eliminating the "Failed to log out" false toast.
+- **Infrastructure & Dev-Ops**:
+    - **Master Schema**: Created `scripts/FINAL_DATABASE_MIGRATION.sql`, a 300+ line consolidated script for complete environment parity.
+    - **Prisma Parity**: Manually rebuilt `prisma/schema.prisma` to include support for `SubscriptionPlan`, `PaymentRequest`, and `FamilyMember` which were missing or broken in the baseline.
+    - **New Assets**: Injected custom images into `public/` and reference scripts into `scripts/` (03-07) for full version control history.
+
+## 22. Pending Implementations (Client Handover)
+- **Email Implementation**: Setting up SMTP or third-party providers (SendGrid/Resend) for transactional emails.
+- **Forgot Password**: Implementation of the reset-password flow (UI exists, backend integration pending).
+- **Payment Gateway**: Integration of automated payment providers (Razorpay/Stripe) to replace the current manual QR verification system.
+- **Email Notification System**: Real-time alerts for matches, messages, and admin approvals to be configured by the client.

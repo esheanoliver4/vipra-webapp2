@@ -2,6 +2,8 @@
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { getUser } from './auth';
+import { createClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
 
 async function getServiceRoleClient() {
   return createSupabaseClient(
@@ -74,11 +76,12 @@ export async function updateStaticPage(id: string, content: string) {
 }
 
 export async function getBlogPosts() {
-  const supabase = await getServiceRoleClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
-    .from('blog_posts')
-    .select('*')
-    .order('created_at', { ascending: false });
+    .from('BlogPost')
+    .select('*, BlogCategory(name)')
+    .eq('status', 'published')
+    .order('published_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching blog posts:', error);
@@ -310,6 +313,134 @@ export async function getUsers() {
     .from('users')
     .select('id, email, first_name, last_name, role, is_premium, premium_plan, created_at')
     .order('created_at', { ascending: false });
+
+  if (error) return { error: error.message };
+  return { data };
+}
+
+// Blog Actions
+export async function getCategories() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('BlogCategory')
+    .select('*')
+    .order('name', { ascending: true });
+  
+  if (error) return { error: error.message };
+  return { data };
+}
+
+export async function getAdminBlogPosts() {
+  const user = await getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  const supabase = await getServiceRoleClient();
+  
+  // Verify admin
+  const { data: adminUser } = await supabase
+    .from('users')
+    .select('role')
+    .eq('auth_id', user.id)
+    .single();
+
+  if (adminUser?.role !== 'admin') {
+    return { error: 'Unauthorized' };
+  }
+
+  const { data, error } = await supabase
+    .from('BlogPost')
+    .select('*, BlogCategory(name)')
+    .order('created_at', { ascending: false });
+
+  if (error) return { error: error.message };
+  return { data };
+}
+
+export async function saveBlogPost(postData: any) {
+  const user = await getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  const supabase = await getServiceRoleClient();
+  
+  // Verify admin
+  const { data: adminUser } = await supabase
+    .from('users')
+    .select('id, role')
+    .eq('auth_id', user.id)
+    .single();
+
+  if (adminUser?.role !== 'admin') {
+    return { error: 'Unauthorized' };
+  }
+
+  const { id, ...data } = postData;
+  const slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  
+  const payload = {
+    ...data,
+    slug,
+    author_id: adminUser.id,
+    updated_at: new Date().toISOString(),
+    published_at: data.status === 'published' ? new Date().toISOString() : null
+  };
+
+  let result;
+  if (id && id !== 'new') {
+    result = await supabase
+      .from('BlogPost')
+      .update(payload)
+      .eq('id', id);
+  } else {
+    result = await supabase
+      .from('BlogPost')
+      .insert([payload])
+      .select()
+      .single();
+  }
+
+  if (result.error) return { error: result.error.message };
+  
+  // Revalidate the blog pages
+  revalidatePath('/blog');
+  return { success: true, data: result.data };
+}
+
+export async function deleteBlogPost(id: string) {
+  const user = await getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  const supabase = await getServiceRoleClient();
+  
+  // Verify admin
+  const { data: adminUser } = await supabase
+    .from('users')
+    .select('role')
+    .eq('auth_id', user.id)
+    .single();
+
+  if (adminUser?.role !== 'admin') {
+    return { error: 'Unauthorized' };
+  }
+
+  const { error } = await supabase
+    .from('BlogPost')
+    .delete()
+    .eq('id', id);
+
+  if (error) return { error: error.message };
+  
+  revalidatePath('/blog');
+  return { success: true };
+}
+
+export async function getBlogPostBySlug(slug: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('BlogPost')
+    .select('*, BlogCategory(name)')
+    .eq('slug', slug)
+    .eq('status', 'published')
+    .single();
 
   if (error) return { error: error.message };
   return { data };

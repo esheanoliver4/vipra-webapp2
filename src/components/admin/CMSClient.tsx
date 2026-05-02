@@ -22,7 +22,9 @@ import {
   Users as UsersIcon,
   Search,
   ShieldCheck,
-  ShieldX
+  ShieldX,
+  FilePlus,
+  Eye
 } from 'lucide-react';
 import { 
   getStaticPages, 
@@ -35,7 +37,11 @@ import {
   getPlatformSettings,
   updatePlatformSettings,
   getUsers,
-  updateUserPlan
+  updateUserPlan,
+  getCategories,
+  getAdminBlogPosts,
+  saveBlogPost,
+  deleteBlogPost
 } from '@/lib/actions/cms';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
@@ -51,6 +57,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface StaticPage {
   id: string;
@@ -89,12 +96,34 @@ interface User {
   created_at: string;
 }
 
+interface BlogCategory {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string | null;
+  featured_image: string | null;
+  category_id: string | null;
+  status: string;
+  published_at: string | null;
+  created_at: string;
+  BlogCategory?: { name: string };
+}
+
 export default function CMSClient() {
   const supabase = createClient();
   const [pages, setPages] = useState<StaticPage[]>([]);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
@@ -106,6 +135,10 @@ export default function CMSClient() {
   // Plan editing state
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
   const [editedPlanData, setEditedPlanData] = useState<Partial<SubscriptionPlan>>({});
+
+  // Blog editing state
+  const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
+  const [editedPostData, setEditedPostData] = useState<Partial<BlogPost>>({});
 
   // Global Settings state
   const [platformSettings, setPlatformSettings] = useState<PlatformSettings>({
@@ -131,11 +164,13 @@ export default function CMSClient() {
 
   async function loadInitialData() {
     try {
-      const [pagesRes, plansRes, settingsRes, usersRes] = await Promise.all([
+      const [pagesRes, plansRes, settingsRes, usersRes, postsRes, catsRes] = await Promise.all([
         getStaticPages(),
         getSubscriptionPlans(),
         getPlatformSettings(),
-        getUsers()
+        getUsers(),
+        getAdminBlogPosts(),
+        getCategories()
       ]);
       
       if (pagesRes.data) setPages(pagesRes.data);
@@ -145,6 +180,8 @@ export default function CMSClient() {
         setUsers(usersRes.data);
         setFilteredUsers(usersRes.data);
       }
+      if (postsRes.data) setBlogPosts(postsRes.data as BlogPost[]);
+      if (catsRes.data) setCategories(catsRes.data);
     } catch (error) {
       console.error('Error loading initial data:', error);
       toast.error('Failed to load CMS data');
@@ -157,12 +194,36 @@ export default function CMSClient() {
     setEditingPage(page);
     setEditedContent(page.content);
     setEditingPlan(null);
+    setEditingPost(null);
   };
 
   const handleEditPlan = (plan: SubscriptionPlan) => {
     setEditingPlan(plan);
     setEditedPlanData({ ...plan });
     setEditingPage(null);
+    setEditingPost(null);
+  };
+
+  const handleEditPost = (post: BlogPost) => {
+    setEditingPost(post);
+    setEditedPostData({ ...post });
+    setEditingPage(null);
+    setEditingPlan(null);
+  };
+
+  const handleAddNewPost = () => {
+    const newPost: Partial<BlogPost> = {
+      title: 'New Blog Post',
+      content: 'Write your content here...',
+      excerpt: '',
+      status: 'draft',
+      category_id: categories.length > 0 ? categories[0].id : null,
+      featured_image: ''
+    };
+    setEditingPost({ id: 'new', ...newPost } as BlogPost);
+    setEditedPostData(newPost);
+    setEditingPage(null);
+    setEditingPlan(null);
   };
 
   const handleAddNewPlan = () => {
@@ -179,6 +240,7 @@ export default function CMSClient() {
     setEditingPlan({ id: 'new', ...newPlan } as SubscriptionPlan);
     setEditedPlanData(newPlan);
     setEditingPage(null);
+    setEditingPost(null);
   };
 
   const handleSavePage = async () => {
@@ -219,6 +281,44 @@ export default function CMSClient() {
       setEditingPlan(null);
     } catch (error: any) {
       toast.error(error.message || 'Failed to save');
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const handleSavePost = async () => {
+    if (!editingPost) return;
+    setSaving(editingPost.id);
+    try {
+      const result = await saveBlogPost({ ...editedPostData, id: editingPost.id });
+      if (result.error) throw new Error(result.error);
+      
+      toast.success('Blog post saved');
+      // Refresh posts list
+      const freshPosts = await getAdminBlogPosts();
+      if (freshPosts.data) setBlogPosts(freshPosts.data as BlogPost[]);
+      setEditingPost(null);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save post');
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const handleDeletePost = async (id: string) => {
+    if (id === 'new') {
+      setEditingPost(null);
+      return;
+    }
+    setSaving(id);
+    try {
+      const result = await deleteBlogPost(id);
+      if (result.error) throw new Error(result.error);
+      setBlogPosts(blogPosts.filter(p => p.id !== id));
+      setEditingPost(null);
+      toast.success('Post deleted');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete');
     } finally {
       setSaving(null);
     }
@@ -308,6 +408,35 @@ export default function CMSClient() {
     }
   };
 
+  const handlePostImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSaving('post_image');
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `blog-${Date.now()}.${fileExt}`;
+      const filePath = `blog/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('platform')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('platform')
+        .getPublicUrl(filePath);
+
+      setEditedPostData({ ...editedPostData, featured_image: publicUrl });
+      toast.success('Blog image uploaded');
+    } catch (error: any) {
+      toast.error(error.message || 'Upload failed');
+    } finally {
+      setSaving(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-96">
@@ -321,7 +450,7 @@ export default function CMSClient() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Admin CMS</h1>
-          <p className="text-gray-500">Manage static pages, plans, users, and global settings</p>
+          <p className="text-gray-500">Manage static pages, plans, users, and blog content</p>
         </div>
       </div>
 
@@ -655,6 +784,194 @@ export default function CMSClient() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="blog" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-1 space-y-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                  <CardTitle className="text-lg">Blog Posts</CardTitle>
+                  <Button size="icon" variant="ghost" onClick={handleAddNewPost} title="Create New Post">
+                    <FilePlus className="w-4 h-4" />
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-2 space-y-1">
+                  {blogPosts.map((post) => (
+                    <button
+                      key={post.id}
+                      onClick={() => handleEditPost(post)}
+                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center justify-between ${
+                        editingPost?.id === post.id ? 'bg-primary text-white' : 'hover:bg-gray-100'
+                      }`}
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium text-sm line-clamp-1">{post.title}</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className={`text-[9px] uppercase ${post.status === 'published' ? 'text-emerald-500 border-emerald-200' : 'text-amber-500 border-amber-200'}`}>
+                            {post.status}
+                          </Badge>
+                          <span className="text-[10px] opacity-70">{post.BlogCategory?.name}</span>
+                        </div>
+                      </div>
+                      <Edit3 className="w-3 h-3 opacity-50" />
+                    </button>
+                  ))}
+                  {blogPosts.length === 0 && (
+                    <div className="text-center py-8 text-gray-400 text-sm italic">No posts yet</div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+            <div className="md:col-span-2">
+              {editingPost ? (
+                <Card className="h-full border-primary/20 shadow-lg">
+                  <CardHeader className="flex flex-row items-center justify-between border-b bg-gray-50">
+                    <div>
+                      <CardTitle className="text-xl">
+                        {editingPost.id === 'new' ? 'Create Blog Post' : 'Edit Blog Post'}
+                      </CardTitle>
+                      <CardDescription>Draft or publish articles for your audience</CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      {editingPost.id !== 'new' && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="text-red-500">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete this post?</AlertDialogTitle>
+                              <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeletePost(editingPost.id)} className="bg-red-500">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                      <Button variant="outline" size="sm" onClick={() => setEditingPost(null)}>Cancel</Button>
+                      <Button size="sm" onClick={handleSavePost} disabled={!!saving}>
+                        {saving === editingPost.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                        Save Post
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold">Title</label>
+                          <input 
+                            type="text" 
+                            value={editedPostData.title || ''} 
+                            onChange={(e) => setEditedPostData({...editedPostData, title: e.target.value})}
+                            className="w-full p-2 border rounded-md"
+                            placeholder="Post Title"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold">Category</label>
+                          <Select 
+                            value={editedPostData.category_id || undefined} 
+                            onValueChange={(val) => setEditedPostData({...editedPostData, category_id: val})}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.map(cat => (
+                                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold">Status</label>
+                        <div className="flex gap-4">
+                          {['draft', 'published'].map(s => (
+                            <label key={s} className="flex items-center gap-2 cursor-pointer">
+                              <input 
+                                type="radio" 
+                                name="status" 
+                                checked={editedPostData.status === s} 
+                                onChange={() => setEditedPostData({...editedPostData, status: s})}
+                              />
+                              <span className="text-sm capitalize">{s}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold">Excerpt (Short Summary)</label>
+                        <textarea 
+                          value={editedPostData.excerpt || ''} 
+                          onChange={(e) => setEditedPostData({...editedPostData, excerpt: e.target.value})}
+                          className="w-full h-20 p-2 border rounded-md text-sm"
+                          placeholder="Brief description for listing pages..."
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold">Featured Image</label>
+                        <div className="flex gap-4 items-start">
+                          <div className="w-32 h-20 bg-gray-100 rounded border overflow-hidden">
+                            {editedPostData.featured_image ? (
+                              <img src={editedPostData.featured_image} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                <Upload className="w-6 h-6" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 space-y-2">
+                            <input 
+                              type="file" 
+                              id="post-image-upload" 
+                              className="hidden" 
+                              accept="image/*" 
+                              onChange={handlePostImageUpload}
+                            />
+                            <Button variant="outline" size="sm" asChild>
+                              <label htmlFor="post-image-upload" className="cursor-pointer">
+                                {saving === 'post_image' ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Upload className="w-3 h-3 mr-2" />}
+                                Upload Image
+                              </label>
+                            </Button>
+                            <p className="text-[10px] text-gray-500">Recommended size: 1200x630px</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-sm font-semibold">Content (Markdown supported)</label>
+                          <Badge variant="outline" className="text-[10px]">MD</Badge>
+                        </div>
+                        <textarea 
+                          value={editedPostData.content || ''} 
+                          onChange={(e) => setEditedPostData({...editedPostData, content: e.target.value})}
+                          className="w-full h-80 p-4 font-mono text-sm border rounded-md"
+                          placeholder="Write your post content here..."
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="h-96 flex flex-col items-center justify-center border-2 border-dashed rounded-lg text-gray-400">
+                  <BookOpen className="w-12 h-12 mb-2" />
+                  <p>Select a post to edit or create a new one</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
         <TabsContent value="settings" className="mt-6">
           <div className="max-w-2xl mx-auto">
             <Card className="border-primary/20 shadow-lg">
@@ -743,14 +1060,6 @@ export default function CMSClient() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        <TabsContent value="blog" className="mt-6">
-          <Card className="p-12 text-center">
-            <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <CardTitle className="text-gray-400 mb-2">Blog Management Coming Soon</CardTitle>
-            <p className="text-gray-500">The blog management interface is currently under development.</p>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>

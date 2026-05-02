@@ -1,4 +1,4 @@
-# VipraPariwaar - Quick Start Guide
+# VipraPariwar - Quick Start Guide
 
 ## Registration is Now Fixed! 🎉
 
@@ -83,7 +83,7 @@
 /pricing - View subscription plans
 /admin - Admin dashboard
 /settings - User settings
-/about - About VipraPariwaar
+/about - About VipraPariwar
 /faq - Frequently asked questions
 /kundli-milan - Astrological matching
 ```
@@ -231,6 +231,6 @@ Having issues? Check:
 
 ---
 
-**You're all set! Start exploring VipraPariwaar now! 🚀**
+**You're all set! Start exploring VipraPariwar now! 🚀**
 
 Go to `/register` and create your account to begin finding your perfect match!

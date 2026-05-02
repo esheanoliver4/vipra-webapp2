@@ -71,15 +71,15 @@ export async function POST(request: NextRequest) {
           last_name: lastName,
           gender: gender === 'male' ? 'male' : 'female',
           gender_locked: false,
-          date_of_birth: dob, // Matches SQL 'date_of_birth'
+          date_of_birth: dob, 
+          location_city: city || '',
           role: 'user',
           is_verified: false,
           is_premium: false,
           premium_plan: 'free',
           approval_status: 'pending',
           is_approved: false,
-          marital_status: maritalStatus || 'never_married',
-          location_city: city || '',
+          marital_status: maritalStatus || 'Never Married',
           mother_tongue: motherTongue || '',
           hobbies: hobbies || '',
           profession: profession || '',
@@ -87,15 +87,31 @@ export async function POST(request: NextRequest) {
           company_working_at: companyWorkingAt || '',
           father_name: fatherName || '',
           mother_name: motherName || '',
-          siblings: siblings || 0,
+          siblings: parseInt(siblings) || 0,
           parents_contact_number: parentsContactNumber || '',
+          age: dob ? calculateAge(dob) : 0,
         },
       ])
       .select()
       .single();
 
+    function calculateAge(dobString: string) {
+      const today = new Date();
+      const birthDate = new Date(dobString);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age;
+    }
+
     if (userError) {
       console.error('[v0] User creation error:', userError);
+      
+      // Cleanup: Delete the auth user if profile creation failed
+      await supabase.auth.admin.deleteUser(userId);
+      
       return NextResponse.json(
         { message: 'Failed to create user: ' + userError.message },
         { status: 400 }

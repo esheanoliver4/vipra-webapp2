@@ -70,7 +70,7 @@ export default function ModernFeatures() {
             </span>
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-medium">
-            Modern technology meets timeless cultural values. VipraPariwaar is built specifically for our community with features that matter most.
+            Modern technology meets timeless cultural values. VipraPariwar is built specifically for our community with features that matter most.
           </p>
         </div>
 

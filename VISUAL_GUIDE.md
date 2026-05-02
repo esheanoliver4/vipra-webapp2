@@ -5,7 +5,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    Admin Dashboard                          │
-│                   VipraPariwaar                             │
+│                   VipraPariwar                             │
 └─────────────────────────────────────────────────────────────┘
 
 📊 STATISTICS CARDS (4-column grid)
@@ -36,7 +36,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  VipraPariwaar  │         │  Browse  ❤️  💬  👤 ▼           │
+│  VipraPariwar  │         │  Browse  ❤️  💬  👤 ▼           │
 │  Brahmin        │ Spacing │         │               Dropdown│
 │  Community      │ Fixed   │ Actions │                       │
 └─────────────────────────────────────────────────────────────┘
@@ -58,7 +58,7 @@ When clicked on 👤:
 
 ```
 ┌──────────────────────────────────┐
-│  VipraPariwaar  ❤️  💬  ☰ (Menu)│
+│  VipraPariwar  ❤️  💬  ☰ (Menu)│
 └──────────────────────────────────┘
 
 When ☰ is clicked:

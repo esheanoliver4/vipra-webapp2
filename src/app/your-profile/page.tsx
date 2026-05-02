@@ -3,7 +3,7 @@ import { getUser } from '@/lib/auth-server';
 import YourProfileClient from '@/components/profile/YourProfileClient';
 
 export const metadata = {
-  title: 'My Profile | VipraPariwaar',
+  title: 'My Profile | VipraPariwar',
   description: 'View and manage your matrimony profile',
 };
 

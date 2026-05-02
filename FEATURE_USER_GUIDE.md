@@ -1,4 +1,4 @@
-# VipraPariwaar - Feature User Guide
+# VipraPariwar - Feature User Guide
 
 Complete guide for end users to understand and use all new features.
 
@@ -48,7 +48,7 @@ The Family Tree allows you to add information about your family members, creatin
 ## Referral & Earn Rewards Program
 
 ### What is the Referral Program?
-Invite your friends to VipraPariwaar and earn rewards for each successful match! It's our way of thanking you for helping others find their perfect partner.
+Invite your friends to VipraPariwar and earn rewards for each successful match! It's our way of thanking you for helping others find their perfect partner.
 
 ### How to Get Your Referral Code
 
@@ -67,7 +67,7 @@ Invite your friends to VipraPariwaar and earn rewards for each successful match!
 #### Method 1: Direct Code Sharing
 - Copy your referral code
 - Share via WhatsApp, email, or any messaging app
-- Format: "Join VipraPariwaar using code: VIPRA123456"
+- Format: "Join VipraPariwar using code: VIPRA123456"
 
 #### Method 2: Referral Link
 1. Click "Share Link" button
@@ -182,7 +182,7 @@ A: No! Refer as many people as you want and earn unlimited rewards.
 ## Success Stories
 
 ### What Are Success Stories?
-Real stories from couples who found their perfect match on VipraPariwaar. These inspiring stories showcase the journeys of people like you.
+Real stories from couples who found their perfect match on VipraPariwar. These inspiring stories showcase the journeys of people like you.
 
 ### Viewing Success Stories
 1. Navigate to "Success Stories" section
@@ -205,7 +205,7 @@ Real stories from couples who found their perfect match on VipraPariwaar. These 
 ### Staying Updated
 
 **News Section:**
-- Latest updates about VipraPariwaar
+- Latest updates about VipraPariwar
 - Community announcements
 - Feature releases
 - Success milestones
@@ -267,10 +267,10 @@ Real stories from couples who found their perfect match on VipraPariwaar. These 
 - Feedback? We'd love to hear from you
 
 ### Contact Information
-- Email: support@viprapariwaar.com
+- Email: support@viprapariwar.com
 - Phone: +91-XXXX-XXXX-XXXX
 - Chat: Available on website
-- Help Center: help.viprapariwaar.com
+- Help Center: help.viprapariwar.com
 
 ---
 

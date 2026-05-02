@@ -1,7 +1,7 @@
-# VipraPariwaar - Brahmin Community Updates
+# VipraPariwar - Brahmin Community Updates
 
 ## Overview
-Enhanced the VipraPariwaar matrimonial platform with comprehensive content emphasizing the Brahmin community and added beautiful cultural imagery.
+Enhanced the VipraPariwar matrimonial platform with comprehensive content emphasizing the Brahmin community and added beautiful cultural imagery.
 
 ## Changes Made
 
@@ -27,7 +27,7 @@ Location: `/public/` folder
 
 **Content Updates:**
 - Changed headline to "Find Your Perfect Life Partner"
-- Added dedicated section explaining VipraPariwaar is for Brahmin families
+- Added dedicated section explaining VipraPariwar is for Brahmin families
 - Emphasized shared values, compatibility, and astrological matching
 - Maintained CTAs: "Start Your Journey" and "Explore Profiles"
 - Kept stats section: 50K+ Members, 2.5K+ Happy Matches, 98% Satisfaction
@@ -84,7 +84,7 @@ Added section header badge and improved visual hierarchy.
 - Neha & Sanjay Mishra (Delhi) - Gotra filtering benefits
 
 ### 7. Updated Footer (ModernFooter.tsx)
-- Added tagline: "VipraPariwaar is dedicated to the Brahmin community"
+- Added tagline: "VipraPariwar is dedicated to the Brahmin community"
 - Maintained social media links
 - Kept all company and legal links
 

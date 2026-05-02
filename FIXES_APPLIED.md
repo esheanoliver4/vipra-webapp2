@@ -1,4 +1,4 @@
-# VipraPariwaar - Fixes Applied
+# VipraPariwar - Fixes Applied
 
 ## Issues Fixed
 

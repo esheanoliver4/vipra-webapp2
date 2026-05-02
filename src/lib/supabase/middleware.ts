@@ -66,7 +66,8 @@ export async function updateSession(request: NextRequest) {
       !userData?.is_approved && 
       isProtectedRoute && 
       pathname !== '/approval-pending' &&
-      pathname !== '/approval-rejected'
+      pathname !== '/approval-rejected' &&
+      pathname !== '/edit-profile'
     ) {
       const pendingUrl = request.nextUrl.clone();
       pendingUrl.pathname = '/approval-pending';

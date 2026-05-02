@@ -1,4 +1,4 @@
-# VipraPariwaar Signup Process Documentation
+# VipraPariwar Signup Process Documentation
 
 ## Overview
 The signup process is a comprehensive 5-step form designed to collect all necessary information for creating a Brahmin matrimonial profile.

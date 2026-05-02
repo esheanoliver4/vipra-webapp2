@@ -123,7 +123,7 @@ psql -U postgres -d your_db < scripts/add-role-to-users.sql
 
 ### Step 2: Create Admin Account
 - The script creates a default admin user
-- Email: admin@viprepariwaar.com
+- Email: admin@viprepariwar.com
 - Change credentials before running in production!
 
 ### Step 3: Login to Admin Dashboard

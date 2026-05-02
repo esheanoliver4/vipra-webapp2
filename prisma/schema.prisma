@@ -77,6 +77,9 @@ model User {
   payment_status         Boolean  @default(false)
   is_premium             Boolean  @default(false)
   premium_plan           String?  // gold, silver, etc.
+  premium_plan_id        String?  // ID of the plan in SubscriptionPlan table
+  connections_sent_count Int      @default(0) // Track used limits
+  last_reset_date        DateTime @default(now()) // For monthly/daily resets
   is_verified            Boolean  @default(false)
   profile_completed      Boolean  @default(false)
   is_approved            Boolean  @default(false) // User has been approved by admin
@@ -123,6 +126,7 @@ model User {
   // Likes/interactions
   likes               Like[] @relation("UserWhoLikes")
   likedBy             Like[] @relation("UserWhoIsLiked")
+  paymentRequests     PaymentRequest[]
 }
 
 // Connection model for tracking user interests (like a cart/wishlist)
@@ -347,4 +351,55 @@ model Message {
   @@index([sender_id])
   @@index([receiver_id])
   @@index([created_at])
+}
+// Static Page model for CMS
+model StaticPage {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  content     String   @db.Text
+  updated_at  DateTime @updatedAt
+  created_at  DateTime @default(now())
+
+  @@index([slug])
+}
+
+// Subscription Plan model for dynamic pricing
+model SubscriptionPlan {
+  id             String   @id @default(uuid())
+  name           String
+  description    String?
+  price          Float
+  billing_period String   // monthly, quarterly, annual, forever
+  features       Json     // Array of feature strings
+  connection_limit Int      @default(0) // 0 means unlimited or handled by strings
+  is_popular     Boolean  @default(false)
+  is_active      Boolean  @default(true)
+  order          Int      @default(0)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@index([is_active])
+}
+
+// Global settings for the platform
+model PlatformSettings {
+  id           String   @id @default("default")
+  qr_code_url  String?
+  upipay_id    String?  // Optional UPI ID
+  updated_at   DateTime @updatedAt
+}
+
+// Track payment submissions for manual verification
+model PaymentRequest {
+  id             String   @id @default(uuid())
+  user_id        String
+  plan_id        String
+  transaction_id String   @unique
+  amount         Float
+  status         String   @default("pending") // pending, approved, rejected
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  user           User     @relation(fields: [user_id], references: [id])
 }

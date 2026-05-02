@@ -51,7 +51,7 @@
 └────────────────────────────────────────────────────────────────────────────┘
 
 ✅ DESKTOP VIEW (md breakpoint and above):
-  ├─ VipraPariwaar logo (left aligned)
+  ├─ VipraPariwar logo (left aligned)
   ├─ Navigation items (center/right aligned)
   │  ├─ Browse (text link)
   │  ├─ Heart icon (Connections)
@@ -60,7 +60,7 @@
   └─ Proper spacing with responsive gaps
 
 ✅ MOBILE VIEW (below md breakpoint):
-  ├─ VipraPariwaar logo (left)
+  ├─ VipraPariwar logo (left)
   ├─ Heart & Message icons (quick access)
   ├─ Hamburger menu icon (right)
   └─ Full menu when hamburger clicked

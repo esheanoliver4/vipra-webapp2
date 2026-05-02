@@ -31,7 +31,7 @@ export default function ModernHeader() {
             </div>
             <div className="hidden sm:flex flex-col">
               <span className="font-bold text-lg md:text-xl text-foreground leading-none">
-                VipraPariwaar
+                VipraPariwar
               </span>
               <span className="text-xs md:text-sm text-primary font-semibold">
                 Brahmin Community

@@ -1,5 +1,5 @@
 ================================================================================
-  VIPRAPARIWAAR - ADMIN DASHBOARD & USER APPROVAL SYSTEM
+  VIPRAPARIWAR - ADMIN DASHBOARD & USER APPROVAL SYSTEM
   FINAL IMPLEMENTATION REPORT
 ================================================================================
 
@@ -97,7 +97,7 @@ STEP 1: RUN DATABASE MIGRATION
 
 STEP 2: UPDATE ADMIN CREDENTIALS
   Edit: scripts/add-role-to-users.sql
-  Change: admin@viprepariwaar.com → your-email@example.com
+  Change: admin@viprepariwar.com → your-email@example.com
   Change: admin@123 → secure-password
   Time: 2 minutes
 

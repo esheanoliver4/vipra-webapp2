@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VipraPariwaar - Brahmin Matrimony",
-  description: "Connect with eligible matches from the Brahmin community. Find your perfect match on VipraPariwaar matrimony platform.",
+  title: "VipraPariwar - Brahmin Matrimony",
+  description: "Connect with eligible matches from the Brahmin community. Find your perfect match on VipraPariwar matrimony platform.",
   keywords: ["matrimony", "brahmin", "marriage", "marriage app"],
 };
 

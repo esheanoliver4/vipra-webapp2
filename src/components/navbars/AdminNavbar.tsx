@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Menu, X, LogOut, Shield, Users, LayoutDashboard, Heart, MessageCircle } from 'lucide-react';
+import { Menu, X, LogOut, Shield, Users, LayoutDashboard, Heart, MessageCircle, FileText } from 'lucide-react';
 import { signOut } from '@/lib/actions/auth';
 import { toast } from 'sonner';
 
@@ -37,35 +37,18 @@ export default function AdminNavbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden sm:flex desktop-nav-container items-center justify-end gap-2 flex-1">
-            <Link href="/browse">
-              <Button variant="ghost" className="text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800">
-                Browse
-              </Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button variant="ghost" className="text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800">
+            <Link href="/admin/dashboard">
+              <Button variant="ghost" className="text-sm font-semibold text-slate-300 hover:text-white hover:bg-white/10">
+                <LayoutDashboard className="w-4 h-4 mr-2" />
                 Dashboard
               </Button>
             </Link>
-            <Link href="/connections" title="Connections">
-              <Button variant="ghost" size="icon" className="text-slate-300 hover:text-white hover:bg-slate-800">
-                <Heart className="w-4 h-4" />
+            <Link href="/admin/cms">
+              <Button variant="ghost" className="text-sm font-semibold text-slate-300 hover:text-white hover:bg-white/10">
+                <FileText className="w-4 h-4 mr-2" />
+                CMS
               </Button>
             </Link>
-            <Link href="/messages" title="Messages">
-              <Button variant="ghost" size="icon" className="text-slate-300 hover:text-white hover:bg-slate-800">
-                <MessageCircle className="w-4 h-4" />
-              </Button>
-            </Link>
-            
-            <div className="w-px h-6 bg-slate-700 mx-2" />
-
-            <Link href="/admin/dashboard">
-              <Button variant="ghost" className="text-sm font-semibold text-white bg-slate-800 hover:bg-slate-700">
-                Admin Panel
-              </Button>
-            </Link>
-
             <Button 
               onClick={handleLogout}
               variant="outline"
@@ -90,39 +73,18 @@ export default function AdminNavbar() {
         {/* Mobile Menu */}
         {isOpen && (
           <div className="sm:hidden pb-6 space-y-2 px-4 animate-fadeIn bg-slate-900 border-t border-slate-800 mt-2">
-            <Link href="/admin/dashboard" onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-lg font-semibold text-white hover:bg-slate-800 mt-2">
-                <Shield className="w-5 h-5 mr-2 text-red-500" />
-                Admin Dashboard
+            <Link href="/admin/dashboard" className="block pt-4">
+              <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-white/10">
+                <LayoutDashboard className="w-5 h-5 mr-2" />
+                Dashboard
               </Button>
             </Link>
-            <div className="pt-2 border-t border-slate-800 space-y-2">
-              <Link href="/browse" onClick={() => setIsOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start text-lg font-semibold text-slate-300 hover:text-white hover:bg-slate-800">
-                  <Users className="w-5 h-5 mr-2" />
-                  Browse Profiles
-                </Button>
-              </Link>
-              <Link href="/dashboard" onClick={() => setIsOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start text-lg font-semibold text-slate-300 hover:text-white hover:bg-slate-800">
-                  <LayoutDashboard className="w-5 h-5 mr-2" />
-                  User Dashboard
-                </Button>
-              </Link>
-              <Link href="/connections" onClick={() => setIsOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start text-lg font-semibold text-slate-300 hover:text-white hover:bg-slate-800">
-                  <Heart className="w-5 h-5 mr-2" />
-                  Connections
-                </Button>
-              </Link>
-              <Link href="/messages" onClick={() => setIsOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start text-lg font-semibold text-slate-300 hover:text-white hover:bg-slate-800">
-                  <MessageCircle className="w-5 h-5 mr-2" />
-                  Messages
-                </Button>
-              </Link>
-            </div>
-            
+            <Link href="/admin/cms">
+              <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-white/10">
+                <FileText className="w-5 h-5 mr-2" />
+                CMS
+              </Button>
+            </Link>
             <div className="pt-4 mt-2 border-t border-slate-800">
               <Button
                 className="w-full bg-transparent border border-red-500/50 text-red-400 font-bold h-12 hover:bg-red-500/10"

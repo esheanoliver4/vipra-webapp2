@@ -1,6 +1,6 @@
-# VipraPariwaar - New Features Documentation Hub
+# VipraPariwar - New Features Documentation Hub
 
-Welcome to the comprehensive documentation for all newly implemented features in VipraPariwaar!
+Welcome to the comprehensive documentation for all newly implemented features in VipraPariwar!
 
 ---
 
@@ -389,8 +389,8 @@ npm run dev
 - Contact support team
 
 ### Contacts
-- Email: support@viprapariwaar.com
-- Help: help.viprapariwaar.com
+- Email: support@viprapariwar.com
+- Help: help.viprapariwar.com
 - Issues: GitHub Issues
 
 ---
@@ -421,7 +421,7 @@ See [IMPLEMENTATION_SUMMARY.md#next-steps](./IMPLEMENTATION_SUMMARY.md#next-step
 
 ## 📄 License
 
-All code and documentation is part of VipraPariwaar project.
+All code and documentation is part of VipraPariwar project.
 
 ---
 
@@ -468,8 +468,8 @@ Everything is ready for integration and deployment!
 **External**
 - GitHub: [Your repo]
 - Live Demo: [Your demo]
-- Help Center: help.viprapariwaar.com
-- Support: support@viprapariwaar.com
+- Help Center: help.viprapariwar.com
+- Support: support@viprapariwar.com
 
 ---
 

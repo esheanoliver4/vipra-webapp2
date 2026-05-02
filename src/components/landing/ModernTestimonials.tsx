@@ -10,7 +10,7 @@ const testimonials = [
     name: 'Priya & Rajesh Sharma',
     initials: 'PR',
     location: 'Mumbai, Maharashtra',
-    content: 'Found each other through VipraPariwaar! We got married in a beautiful traditional ceremony with our families\' blessings. The Kundli matching gave us confidence.',
+    content: 'Found each other through VipraPariwar! We got married in a beautiful traditional ceremony with our families\' blessings. The Kundli matching gave us confidence.',
     rating: 5
   },
   {
@@ -64,7 +64,7 @@ export default function ModernTestimonials() {
             </span>
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-medium">
-            Real couples from the Brahmin community who found love and built lasting relationships through VipraPariwaar.
+            Real couples from the Brahmin community who found love and built lasting relationships through VipraPariwar.
           </p>
         </div>
 
@@ -142,7 +142,7 @@ export default function ModernTestimonials() {
               A Match Made by Technology & Tradition
             </h3>
             <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-              Thousands of successful matches happen every month on VipraPariwaar. From the initial connection through our smart matching algorithm to the wedding ceremony honoring our traditions, every success story is unique and beautiful.
+              Thousands of successful matches happen every month on VipraPariwar. From the initial connection through our smart matching algorithm to the wedding ceremony honoring our traditions, every success story is unique and beautiful.
             </p>
             <div className="space-y-3">
               <div className="flex items-start gap-3">

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle } from 'lucide-react';
 
 export const metadata = {
-  title: 'Report Abuse - VipraPariwaar',
+  title: 'Report Abuse - VipraPariwar',
   description: 'Report suspicious behavior or abuse to our safety team.',
 };
 
@@ -17,7 +17,7 @@ export default function ReportPage() {
           </div>
           <h1 className="text-4xl font-bold text-foreground mb-4">Report Abuse</h1>
           <p className="text-xl text-muted-foreground">
-            Help us keep VipraPariwaar safe. Report any suspicious, offensive, or fraudulent behavior.
+            Help us keep VipraPariwar safe. Report any suspicious, offensive, or fraudulent behavior.
           </p>
         </div>
 

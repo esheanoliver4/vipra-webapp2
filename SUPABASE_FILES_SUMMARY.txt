@@ -57,7 +57,7 @@ STATUS: ✅ READY FOR SUPABASE CONNECTION
 Step 1: Create Supabase Project
   → Go to https://supabase.com
   → Click "New Project"
-  → Fill in project name: VipraPariwaar
+  → Fill in project name: VipraPariwar
   → Choose region and password
   → Wait 2-3 minutes for initialization
 

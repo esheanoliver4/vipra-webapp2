@@ -47,7 +47,7 @@ Copy this file to `.env.local` and fill in your Supabase keys.
 ```
 1. Go to https://supabase.com
 2. Click "New Project"
-3. Name: VipraPariwaar
+3. Name: VipraPariwar
 4. Set strong password
 5. Choose region
 6. Wait for initialization

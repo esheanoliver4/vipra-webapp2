@@ -12,11 +12,15 @@ import { toast } from 'sonner';
 interface SettingsClientProps {
   userId: string;
 }
+import { deleteUserAccount } from '@/lib/actions/auth';
+import { useRouter } from 'next/navigation';
 
 export default function SettingsClient({ userId }: SettingsClientProps) {
+  const router = useRouter();
   const [notifications, setNotifications] = useState(true);
   const [emailUpdates, setEmailUpdates] = useState(true);
   const [profileVisibility, setProfileVisibility] = useState('public');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleSavePreferences = async () => {
     toast.success('Preferences saved successfully');
@@ -27,7 +31,21 @@ export default function SettingsClient({ userId }: SettingsClientProps) {
   };
 
   const handleDeleteAccount = async () => {
-    toast.success('Account deletion initiated. Check your email for confirmation.');
+    try {
+      setIsDeleting(true);
+      const result = await deleteUserAccount();
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      toast.success('Account deleted successfully');
+      router.push('/signup');
+    } catch (error: any) {
+      console.error('Delete error:', error);
+      toast.error(error.message || 'Failed to delete account');
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -99,8 +117,12 @@ export default function SettingsClient({ userId }: SettingsClientProps) {
                   </AlertDialogDescription>
                   <div className="flex gap-3">
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive">
-                      Delete
+                    <AlertDialogAction 
+                      onClick={handleDeleteAccount} 
+                      className="bg-destructive hover:bg-destructive/90"
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? 'Deleting...' : 'Delete'}
                     </AlertDialogAction>
                   </div>
                 </AlertDialogContent>

@@ -1,4 +1,4 @@
-# VipraPariwaar - Complete System Implementation
+# VipraPariwar - Complete System Implementation
 
 ## 🎉 What's Been Completed
 
@@ -96,7 +96,7 @@ This will:
 
 ### Step 2: Update Admin Credentials
 Edit `scripts/add-role-to-users.sql` before running:
-- Change `admin@viprepariwaar.com` to your email
+- Change `admin@viprepariwar.com` to your email
 - Change `admin@123` to secure password
 
 ### Step 3: Login as Admin

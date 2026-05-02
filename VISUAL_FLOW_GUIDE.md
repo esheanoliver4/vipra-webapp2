@@ -8,7 +8,7 @@ A comprehensive guide showing how users navigate through all new features.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     VIPRAPARIWAAR DASHBOARD                     │
+│                     VIPRAPARIWAR DASHBOARD                     │
 │                     (Authenticated User)                         │
 └─────────────────────────────────────────────────────────────────┘
                               │
@@ -375,7 +375,7 @@ User on Homepage
 
 ```
 ┌──────────────────────────┐
-│  VIPRAPARIWAAR           │
+│  VIPRAPARIWAR           │
 │  Logged in: [User Name]  │
 ├──────────────────────────┤
 │                          │

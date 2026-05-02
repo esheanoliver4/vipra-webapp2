@@ -3,8 +3,8 @@ import { Mail, Phone, MapPin, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export const metadata = {
-  title: 'Contact Us - VipraPariwaar',
-  description: 'Get in touch with the VipraPariwaar support team.',
+  title: 'Contact Us - VipraPariwar',
+  description: 'Get in touch with the VipraPariwar support team.',
 };
 
 export default function ContactPage() {
@@ -42,7 +42,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <p className="font-medium text-foreground">Email Support</p>
-                  <p>support@viprapariwaar.com</p>
+                  <p>support@viprapariwar.com</p>
                 </div>
               </div>
 

@@ -14,7 +14,7 @@ Complete this checklist as you set up Supabase for VipraPariwar.
 
 - [ ] Logged into Supabase dashboard
 - [ ] Clicked "New Project"
-- [ ] Project Name: VipraPariwaar (or preferred name)
+- [ ] Project Name: VipraPariwar (or preferred name)
 - [ ] Strong database password created
 - [ ] Region selected (closest to users)
 - [ ] Pricing plan selected (Free or Pro)

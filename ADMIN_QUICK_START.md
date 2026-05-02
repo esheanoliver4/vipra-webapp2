@@ -10,7 +10,7 @@ psql -U postgres -d your_database < scripts/add-role-to-users.sql
 
 ### 2. Access Admin Login
 - URL: `http://localhost:3000/admin/login`
-- Email: `admin@viprepariwaar.com`
+- Email: `admin@viprepariwar.com`
 - Password: `admin@123` (change in production!)
 
 ### 3. View Dashboard

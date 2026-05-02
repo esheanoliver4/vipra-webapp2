@@ -1,8 +1,8 @@
-# VipraPariwaar - Matrimony Platform Setup Guide
+# VipraPariwar - Matrimony Platform Setup Guide
 
 ## Project Overview
 
-VipraPariwaar is a modern, elegant matrimony platform built specifically for the Brahmin community. It combines traditional matchmaking values with cutting-edge technology.
+VipraPariwar is a modern, elegant matrimony platform built specifically for the Brahmin community. It combines traditional matchmaking values with cutting-edge technology.
 
 ## Tech Stack
 

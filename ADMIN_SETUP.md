@@ -16,7 +16,7 @@ psql -U postgres -d your_db < scripts/add-role-to-users.sql
 This will:
 - Add `role` column to users table
 - Create approval_logs table
-- Add initial admin user (email: admin@viprepariwaar.com)
+- Add initial admin user (email: admin@viprepariwar.com)
 
 ### 2. Update Admin Credentials
 Replace the admin email and password in the script before running:
@@ -33,7 +33,7 @@ INSERT INTO users (...) VALUES (
 
 ### Admin Portal
 - URL: `/admin/login`
-- Email: admin@viprepariwaar.com (or your custom email)
+- Email: admin@viprepariwar.com (or your custom email)
 - Password: Set in migration script
 
 ### User Dashboard

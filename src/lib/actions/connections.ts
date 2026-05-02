@@ -11,6 +11,32 @@ export async function sendConnectionRequest(toUserId: string, message?: string) 
     return { error: 'Not authenticated' };
   }
 
+  // Use service role for limit check and increment
+  const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
+  const serviceRoleClient = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  // 1. Get user profile and their plan's limit
+  const { data: userProfile, error: profileError } = await serviceRoleClient
+    .from('users')
+    .select('*, SubscriptionPlan!premium_plan_id(connection_limit)')
+    .eq('auth_id', user.id)
+    .single();
+
+  if (profileError || !userProfile) {
+    return { error: 'Profile not found' };
+  }
+
+  const limit = (userProfile.SubscriptionPlan as any)?.connection_limit || 5;
+  const currentCount = userProfile.connections_sent_count || 0;
+
+  if (currentCount >= limit) {
+    return { error: `You have reached your limit of ${limit} connection requests. Please upgrade your plan to send more.` };
+  }
+
+  // 2. Insert connection
   const { error } = await supabase
     .from('connections')
     .insert([
@@ -25,6 +51,12 @@ export async function sendConnectionRequest(toUserId: string, message?: string) 
   if (error) {
     return { error: error.message };
   }
+
+  // 3. Increment the count
+  await serviceRoleClient
+    .from('users')
+    .update({ connections_sent_count: currentCount + 1 })
+    .eq('id', userProfile.id);
 
   return { success: true };
 }

@@ -133,7 +133,7 @@ export default function CardStack({
   }
 
   return (
-    <div className="relative w-full px-4 sm:px-0 max-w-full sm:max-w-2xl mx-auto py-8">
+    <div className="relative w-full px-2 sm:px-0 max-w-lg mx-auto py-4">
       <AnimatePresence>
         {currentIndex < profiles.length && (
           <motion.div
@@ -155,7 +155,7 @@ export default function CardStack({
             className="relative bg-white rounded-3xl shadow-2xl overflow-hidden hover-lift"
           >
             {/* Image Carousel */}
-            <div className="relative w-full h-80 sm:h-96 md:h-[500px] bg-gradient-to-b from-gray-200 to-gray-300">
+            <div className="relative w-full h-72 sm:h-80 md:h-[380px] bg-gradient-to-b from-gray-200 to-gray-300">
               {currentImages.length > 0 ? (
                 <>
                   <img
@@ -211,7 +211,7 @@ export default function CardStack({
             </div>
 
             {/* Profile Info */}
-            <div className="p-4 sm:p-6 space-y-4 animate-slideInUp">
+            <div className="p-4 space-y-3 animate-slideInUp">
               {/* Name and Age/Location */}
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">

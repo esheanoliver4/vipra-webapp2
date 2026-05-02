@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Menu, X, LogOut, Heart, MessageCircle, Settings, Users } from 'lucide-react';
+import { Menu, X, LogOut, Heart, MessageCircle, Settings, Users, CreditCard } from 'lucide-react';
 import { signOut } from '@/lib/actions/auth';
 import { toast } from 'sonner';
 
@@ -30,7 +30,7 @@ export default function UserNavbar() {
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center group">
             <div className="text-xl sm:text-2xl font-bold transition-all duration-300 text-white">
-              VipraPariwaar
+              VipraPariwar
             </div>
           </Link>
 
@@ -58,6 +58,11 @@ export default function UserNavbar() {
             <Link href="/messages" title="Messages">
               <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 transition-colors relative">
                 <MessageCircle className="w-5 h-5" />
+              </Button>
+            </Link>
+            <Link href="/subscription" title="Subscription">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 transition-colors">
+                <CreditCard className="w-5 h-5" />
               </Button>
             </Link>
             <Link href="/settings" title="Settings">

@@ -1,7 +1,7 @@
 import KundliMilanClient from '@/components/kundli/KundliMilanClient';
 
 export const metadata = {
-  title: 'Kundli Milan - Astrological Compatibility | VipraPariwaar',
+  title: 'Kundli Milan - Astrological Compatibility | VipraPariwar',
   description: 'Check astrological compatibility between potential matches using traditional Kundli Milan',
 };
 

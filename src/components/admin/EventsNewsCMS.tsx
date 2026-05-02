@@ -70,7 +70,7 @@ export default function EventsNewsCMS() {
       setEvents([
         {
           id: '1',
-          title: 'Annual VipraPariwaar Meetup',
+          title: 'Annual VipraPariwar Meetup',
           description: 'Join us for our annual community meetup',
           event_date: '2024-04-15',
           location: 'Mumbai, India',
@@ -83,7 +83,7 @@ export default function EventsNewsCMS() {
       setNews([
         {
           id: '1',
-          title: 'VipraPariwaar Reaches 10,000 Members!',
+          title: 'VipraPariwar Reaches 10,000 Members!',
           content: 'We are proud to announce...',
           published: true,
           featured: true,

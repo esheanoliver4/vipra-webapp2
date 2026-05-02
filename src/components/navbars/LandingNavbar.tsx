@@ -15,7 +15,7 @@ export default function LandingNavbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center group">
             <div className="text-xl sm:text-2xl font-bold transition-all duration-300 text-gradient-red-pink">
-              VipraPariwaar
+              VipraPariwar
             </div>
           </Link>
 

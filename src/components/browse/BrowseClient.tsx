@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import CardStack, { Profile } from '@/components/cards/CardStack';
 import { toast } from 'sonner';
+import { likeProfile, passProfile, getBrowseProfiles } from '@/lib/actions/auth';
 import { Filter } from 'lucide-react';
 
 export default function BrowseClient() {
@@ -21,102 +22,22 @@ export default function BrowseClient() {
     try {
       setIsLoading(true);
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error('Please login to browse profiles');
-        return;
-      }
+      const result = await getBrowseProfiles({ gender });
 
-      const { data: currentUserProfile } = await supabase
-        .from('users')
-        .select('*')
-        .eq('auth_id', user.id)
-        .single();
-
-      if (!currentUserProfile) {
-        setIsLoading(false);
-        return;
-      }
-
-      // Fetch IDs of profiles already interacted with (likes/passes)
-      const { data: likesData, error: likesError } = await supabase
-        .from('likes')
-        .select('*')
-        .eq('user_id', currentUserProfile.id);
-
-      if (likesError) {
-        console.warn('Could not fetch likes (table may not exist yet):', likesError.message);
-      }
-
-      // Fetch IDs of profiles with pending/accepted connection requests
-      const { data: connectionsData1, error: connError1 } = await supabase
-        .from('connections')
-        .select('*')
-        .eq('from_user_id', currentUserProfile.id);
-
-      const { data: connectionsData2, error: connError2 } = await supabase
-        .from('connections')
-        .select('*')
-        .eq('to_user_id', currentUserProfile.id);
-
-      if (connError1 || connError2) {
-        console.warn('Could not fetch connections:', connError1?.message || connError2?.message);
-      }
-
-      const interactedUserIds = new Set<string>();
-      (likesData || []).forEach((i: any) => {
-        const id = i.liked_user_id || i.likedUserId;
-        if (id) interactedUserIds.add(id);
-      });
-      (connectionsData1 || []).forEach((i: any) => {
-        const id = i.to_user_id || i.recipient_id || i.toUserId;
-        if (id) interactedUserIds.add(id);
-      });
-      (connectionsData2 || []).forEach((i: any) => {
-        const id = i.from_user_id || i.initiator_id || i.fromUserId;
-        if (id) interactedUserIds.add(id);
-      });
-
-      const excludeIds = Array.from(interactedUserIds);
-      console.log('[v0] Excluding profiles:', excludeIds);
-
-      let query = supabase
-        .from('users')
-        .select(`
-          *,
-          profile_images(
-            image_url,
-            is_primary
-          )
-        `)
-        .neq('id', currentUserProfile.id)
-        .neq('role', 'admin')
-        .eq('is_approved', true);
-
-      // Exclude already interacted profiles
-      if (excludeIds.length > 0) {
-        // Use proper PostgREST syntax for 'in' filter with strings/UUIDs
-        query = query.not('id', 'in', `(${excludeIds.join(',')})`);
-      }
-
-      if (gender !== 'all') {
-        query = query.eq('gender', gender);
-      }
-
-      const { data, error } = await query.limit(50);
-
-      if (error) {
-        console.error('[v0] Error fetching profiles:', error);
+      if (result.error) {
+        console.error('[v0] Error fetching profiles:', result.error);
         toast.error('Failed to load profiles');
         setIsLoading(false);
         return;
       }
 
-      const transformedProfiles: Profile[] = (data || []).map((user: any) => {
+      const transformedProfiles: Profile[] = (result.data || []).map((user: any) => {
         // Find primary image or fallback to first image
         const primaryImage = user.profile_images?.find((img: any) => img.is_primary)?.image_url;
         const fallbackImage = user.profile_images?.[0]?.image_url || user.profile_image_url || user.profile_pic || '';
         
+        const userGotra = Array.isArray(user.kundlis) ? user.kundlis[0]?.gotra : user.kundlis?.gotra;
+
         return {
           id: user.id,
           first_name: user.first_name || '',
@@ -127,7 +48,7 @@ export default function BrowseClient() {
           profile_image_url: primaryImage || fallbackImage,
           education: user.education || '',
           occupation: user.profession || user.occupation || '',
-          gotra: user.gotra || '',
+          gotra: userGotra || user.gotra || '',
           religion: user.religion || '',
         };
       });
@@ -143,69 +64,19 @@ export default function BrowseClient() {
 
   const handleLike = async (profileId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: currentUser } = await supabase
-        .from('users')
-        .select('id')
-        .eq('auth_id', user.id)
-        .single();
-
-      if (!currentUser) return;
-
-      // Record the like
-      const { error } = await supabase
-        .from('likes')
-        .insert([
-          {
-            user_id: currentUser.id,
-            liked_user_id: profileId,
-            action: 'like',
-          },
-        ]);
-
-      if (error) {
-        if (error.code === '23505') {
-          // Unique violation - already liked, ignore
-          return;
-        }
-        throw error;
-      }
-
+      const result = await likeProfile(profileId);
+      if (result.error) throw new Error(result.error);
       toast.success('Profile liked!');
-      
-      // Refresh profiles to remove the liked one (or wait for swipe animation to finish)
-      // fetchProfiles(); 
     } catch (error) {
       console.error('[v0] Like error:', error);
+      toast.error('Failed to like profile');
     }
   };
 
   const handleDislike = async (profileId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: currentUser } = await supabase
-        .from('users')
-        .select('id')
-        .eq('auth_id', user.id)
-        .single();
-
-      if (!currentUser) return;
-
-      // Record the pass
-      await supabase
-        .from('likes')
-        .insert([
-          {
-            user_id: currentUser.id,
-            liked_user_id: profileId,
-            action: 'pass',
-          },
-        ]);
-
+      const result = await passProfile(profileId);
+      if (result.error) throw new Error(result.error);
       console.log('[v0] Profile passed:', profileId);
     } catch (error) {
       console.error('[v0] Pass error:', error);
@@ -214,7 +85,7 @@ export default function BrowseClient() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-50 via-pink-50 to-white py-6 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-lg mx-auto">
         <div className="mb-8 animate-fadeInDown">
           <h1 className="text-3xl sm:text-5xl font-bold text-gradient-red-pink mb-2">
             Find Your Perfect Match

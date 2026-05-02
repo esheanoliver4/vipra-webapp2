@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, Lock, Eye, Server } from 'lucide-react';
 
 export const metadata = {
-  title: 'Security - VipraPariwaar',
-  description: 'Learn about how VipraPariwaar keeps your data secure.',
+  title: 'Security - VipraPariwar',
+  description: 'Learn about how VipraPariwar keeps your data secure.',
 };
 
 export default function SecurityPage() {
@@ -26,7 +26,7 @@ export default function SecurityPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-muted-foreground">
-              All data transmitted to and from VipraPariwaar is encrypted using industry-standard TLS protocols. Your sensitive information is safely encrypted in our databases.
+              All data transmitted to and from VipraPariwar is encrypted using industry-standard TLS protocols. Your sensitive information is safely encrypted in our databases.
             </CardContent>
           </Card>
 

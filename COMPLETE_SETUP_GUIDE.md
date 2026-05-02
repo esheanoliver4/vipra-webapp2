@@ -1,7 +1,7 @@
-# VipraPariwaar - Complete Setup & Features Guide
+# VipraPariwar - Complete Setup & Features Guide
 
 ## Overview
-VipraPariwaar is a fully-featured matrimonial platform designed specifically for the Brahmin community with Tinder-like swiping interface and mobile-first design.
+VipraPariwar is a fully-featured matrimonial platform designed specifically for the Brahmin community with Tinder-like swiping interface and mobile-first design.
 
 ## All Issues Resolved
 
@@ -257,4 +257,4 @@ Common issues and solutions included in codebase.
 ---
 
 Last Updated: 2024
-VipraPariwaar - Brahmin Matrimony Platform
+VipraPariwar - Brahmin Matrimony Platform

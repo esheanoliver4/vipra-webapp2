@@ -3,7 +3,7 @@ import { Briefcase, Users, Zap, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export const metadata = {
-  title: 'Careers - VipraPariwaar',
+  title: 'Careers - VipraPariwar',
   description: 'Join our team to help build families and preserve culture.',
 };
 
@@ -18,7 +18,7 @@ export default function CareersPage() {
     <main className="min-h-screen bg-background py-12 md:py-16">
       <div className="container max-w-4xl">
         <div className="mb-16 text-center">
-          <h1 className="text-5xl font-bold text-foreground mb-4">Careers at VipraPariwaar</h1>
+          <h1 className="text-5xl font-bold text-foreground mb-4">Careers at VipraPariwar</h1>
           <p className="text-xl text-muted-foreground mb-6">
             Join a mission-driven team dedicated to bringing people together and building lifelong bonds.
           </p>

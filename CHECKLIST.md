@@ -1,4 +1,4 @@
-# VipraPariwaar - Implementation Checklist
+# VipraPariwar - Implementation Checklist
 
 ## Core Functionality Implemented
 

@@ -7,7 +7,7 @@ ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user';
 INSERT INTO users (id, email, name, role, password, dob, place_of_birth, gender, father_name, mother_name, profession, education, age, city, marital_status, mother_tongue, created_at, updated_at)
 SELECT 
     gen_random_uuid(),
-    'admin@viprepariwaar.com',
+    'admin@viprepariwar.com',
     'Admin User',
     'admin',
     crypt('admin@123', gen_salt('bf')),
@@ -24,7 +24,7 @@ SELECT
     'English',
     NOW(),
     NOW()
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'admin@viprepariwaar.com');
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'admin@viprepariwar.com');
 
 -- Create approval_logs table if it doesn't exist
 CREATE TABLE IF NOT EXISTS approval_logs (

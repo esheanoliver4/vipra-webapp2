@@ -1,20 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Users, FileText, DollarSign, AlertCircle, Activity, TrendingUp, Plus, Trash2, Edit2, BookOpen, Newspaper, Calendar, Award } from 'lucide-react';
+import { Users, AlertCircle, CheckCircle, XCircle, Eye, Trash2, Clock, Loader2, Power } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
-import { verifyUser, makeUserPremium, getAdminStats } from '@/lib/actions/admin';
+import { approveUser, rejectUser, deleteUser, deactivateUser, getAdminStats } from '@/lib/actions/admin';
 
 interface AdminClientProps {
   userId: string;
@@ -26,19 +21,22 @@ interface User {
   first_name: string;
   last_name: string;
   gender: string;
-  is_verified: boolean;
-  is_premium: boolean;
+  payment_id: string;
+  payment_status: boolean;
+  approval_status: string;
+  deactivated_at: string | null;
   created_at: string;
 }
 
 export default function AdminClient({ userId }: AdminClientProps) {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
+  const router = useRouter();
   const [stats, setStats] = useState({
     totalUsers: 0,
-    verifiedProfiles: 0,
-    premiumMembers: 0,
-    activeToday: 0,
+    pendingUsers: 0,
+    acceptedUsers: 0,
+    rejectedUsers: 0,
   });
   const supabase = createClient();
 
@@ -54,12 +52,12 @@ export default function AdminClient({ userId }: AdminClientProps) {
       const statsData = await getAdminStats();
       setStats(statsData);
 
-      // Fetch users data (still using client for now but restricted to 20)
+      // Fetch users data
       const { data: usersData, error: usersError } = await supabase
         .from('users')
-        .select('id, email, first_name, last_name, gender, is_verified, is_premium, created_at')
+        .select('id, email, first_name, last_name, gender, payment_id, payment_status, approval_status, deactivated_at, created_at')
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(100);
 
       if (usersError) {
         console.error('[v0] Error fetching users:', usersError);
@@ -75,430 +73,254 @@ export default function AdminClient({ userId }: AdminClientProps) {
     }
   };
 
-  const handleVerifyUser = async (userId: string) => {
+  const handleApprove = async (userId: string) => {
     try {
-      const result = await verifyUser(userId);
-
+      const result = await approveUser(userId);
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success('User verified successfully');
+        toast.success('User approved successfully');
         fetchAdminData();
       }
     } catch (error) {
-      toast.error('Error verifying user');
+      toast.error('Error approving user');
     }
   };
 
-  const handleMakePremium = async (userId: string) => {
+  const handleReject = async (userId: string) => {
     try {
-      const result = await makeUserPremium(userId);
-
+      const result = await rejectUser(userId);
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success('User made premium successfully');
+        toast.success('User rejected successfully');
         fetchAdminData();
       }
     } catch (error) {
-      toast.error('Error updating user');
+      toast.error('Error rejecting user');
+    }
+  };
+
+  const handleDelete = async (userId: string) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    try {
+      const result = await deleteUser(userId);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success('User deleted successfully');
+        fetchAdminData();
+      }
+    } catch (error) {
+      toast.error('Error deleting user');
+    }
+  };
+
+  const handleDeactivate = async (userId: string) => {
+    if (!window.confirm('Are you sure you want to deactivate this user?')) return;
+    try {
+      const result = await deactivateUser(userId);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success('User deactivated successfully');
+        fetchAdminData();
+      }
+    } catch (error) {
+      toast.error('Error deactivating user');
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <Activity className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading admin dashboard...</p>
-        </div>
+      <div className="flex flex-col items-center justify-center h-screen bg-slate-50">
+        <Loader2 className="w-12 h-12 text-blue-600 animate-spin mb-4" />
+        <p className="text-slate-500 font-medium text-lg">Loading admin dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      {/* Page Title */}
-      <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Admin Dashboard</h1>
-        <p className="text-muted-foreground mt-2">Manage users, content, and monitor platform activity</p>
-      </div>
+    <div className="min-h-screen bg-slate-50/50 pb-20">
+      <div className="max-w-7xl mx-auto space-y-12 py-12 px-4 sm:px-6">
+        {/* Page Title */}
+        <div className="text-center space-y-3">
+          <h1 className="text-5xl font-black text-slate-900 tracking-tight">Admin Dashboard</h1>
+          <p className="text-xl text-slate-500 font-medium">Manage user registrations and approvals</p>
+        </div>
 
-      {/* Tabs Navigation */}
-      <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="grid grid-cols-5 lg:grid-cols-5 w-full bg-gradient-to-r from-muted to-muted/50 rounded-lg p-1">
-          <TabsTrigger value="dashboard" className="flex items-center gap-2">
-            <Activity className="w-4 h-4" />
-            <span className="hidden sm:inline">Dashboard</span>
-          </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            <span className="hidden sm:inline">Users</span>
-          </TabsTrigger>
-          <TabsTrigger value="blog" className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4" />
-            <span className="hidden sm:inline">Blog</span>
-          </TabsTrigger>
-          <TabsTrigger value="stories" className="flex items-center gap-2">
-            <Award className="w-4 h-4" />
-            <span className="hidden sm:inline">Stories</span>
-          </TabsTrigger>
-          <TabsTrigger value="content" className="flex items-center gap-2">
-            <Newspaper className="w-4 h-4" />
-            <span className="hidden sm:inline">Content</span>
-          </TabsTrigger>
-        </TabsList>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-orange-600', bgColor: 'bg-orange-50' },
+            { label: 'Pending', value: stats.pendingUsers, icon: Clock, color: 'text-amber-500', bgColor: 'bg-amber-50' },
+            { label: 'Accepted', value: stats.acceptedUsers, icon: CheckCircle, color: 'text-emerald-500', bgColor: 'bg-emerald-50' },
+            { label: 'Rejected', value: stats.rejectedUsers, icon: XCircle, color: 'text-rose-500', bgColor: 'bg-rose-50' },
+          ].map((stat, idx) => {
+            const Icon = stat.icon;
+            return (
+              <Card key={idx} className="border-none shadow-sm rounded-3xl overflow-hidden bg-white hover:shadow-md transition-all duration-300">
+                <CardContent className="p-8 text-center space-y-4">
+                  <div className={`w-14 h-14 ${stat.bgColor} rounded-2xl flex items-center justify-center mx-auto`}>
+                    <Icon className={`w-7 h-7 ${stat.color}`} />
+                  </div>
+                  <div>
+                    <div className="text-4xl font-black text-slate-900 leading-none">{stat.value}</div>
+                    <p className="text-sm font-bold text-slate-400 tracking-widest uppercase mt-2">{stat.label}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
 
-        {/* Dashboard Tab */}
-        <TabsContent value="dashboard" className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
+        {/* Users Table */}
+        <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
+          <CardHeader className="bg-white border-b border-slate-100 p-8">
+            <CardTitle className="text-2xl font-black text-slate-900">User Management</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsers}</div>
-            <p className="text-xs text-muted-foreground">Registered members</p>
-          </CardContent>
-        </Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
+                    <TableHead className="font-bold text-slate-900 py-4 pl-4">Name</TableHead>
+                    <TableHead className="font-bold text-slate-900 py-4 px-2">TXN ID</TableHead>
+                    <TableHead className="font-bold text-slate-900 py-4 px-2">Payment</TableHead>
+                    <TableHead className="font-bold text-slate-900 py-4 px-2">Status</TableHead>
+                    <TableHead className="font-bold text-slate-900 py-4 px-2">Info</TableHead>
+                    <TableHead className="font-bold text-slate-900 py-4 px-2">Date</TableHead>
+                    <TableHead className="font-bold text-slate-900 py-4 pr-4">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.length > 0 ? (
+                    users.map((user) => (
+                      <TableRow key={user.id} className="hover:bg-slate-50/30 transition-colors border-b border-slate-50">
+                        <TableCell className="py-4 pl-4">
+                          <div className="font-bold text-slate-900 text-sm">{user.first_name} {user.last_name}</div>
+                          <div className="text-[10px] font-bold text-slate-400 capitalize">{user.gender}</div>
+                        </TableCell>
+                        <TableCell className="py-4 px-2">
+                          <span className="font-mono text-[10px] text-slate-400 bg-slate-50 px-1 py-0.5 rounded">
+                            {user.payment_id ? user.payment_id.slice(-6) : '-'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-4 px-2">
+                          {user.payment_status ? (
+                            <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold px-3 py-1 rounded-full shadow-none">Paid</Badge>
+                          ) : (
+                            <span className="text-xs font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-full">Not paid</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="py-6">
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2.5 h-2.5 rounded-full ${user.approval_status === 'approved' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' :
+                                  user.approval_status === 'rejected' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]' :
+                                    'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]'
+                                }`} />
+                              <span className={`text-xs font-black uppercase tracking-widest ${user.approval_status === 'approved' ? 'text-emerald-600' :
+                                  user.approval_status === 'rejected' ? 'text-rose-600' : 'text-amber-600'
+                                }`}>
+                                {user.approval_status || 'pending'}
+                              </span>
+                              {user.approval_status === 'approved' && (
+                                <CheckCircle className="w-4 h-4 text-emerald-500" />
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-6">
+                          {user.approval_status === 'approved' ? (
+                            <div className="flex flex-col">
+                              <span className="text-xs font-bold text-emerald-600">Active</span>
+                              <span className="text-[10px] font-bold text-slate-400">
+                                Approved:<br />
+                                {new Date(user.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-sm font-bold text-slate-300">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="py-6 text-sm text-slate-500 font-bold">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="py-6 pr-8">
+                          <div className="flex items-center gap-3">
+                            {user.approval_status === 'pending' ? (
+                              <Button
+                                size="sm"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white hover:text-black font-black gap-2 px-5 py-5 rounded-xl shadow-lg shadow-emerald-100 transition-all active:scale-95 border-2 border-emerald-700/10"
+                                onClick={() => handleApprove(user.id)}
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                                Accept
+                              </Button>
+                            ) : user.approval_status === 'approved' ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-2 border-amber-400 text-amber-600 hover:bg-amber-50 hover:text-black font-black gap-2 px-5 py-5 rounded-xl transition-all active:scale-95 shadow-sm"
+                                onClick={() => handleDeactivate(user.id)}
+                              >
+                                <Power className="w-4 h-4" />
+                                Deactivate
+                              </Button>
+                            ) : null}
 
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Verified Profiles</CardTitle>
-            <FileText className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.verifiedProfiles}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.totalUsers > 0 ? Math.round((stats.verifiedProfiles / stats.totalUsers) * 100) : 0}% verification rate
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Premium Members</CardTitle>
-            <DollarSign className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.premiumMembers}</div>
-            <p className="text-xs text-muted-foreground">Active subscriptions</p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Today</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeToday}</div>
-            <p className="text-xs text-muted-foreground">Daily active users</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Users Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Users</CardTitle>
-          <CardDescription>Manage and verify user profiles</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Gender</TableHead>
-                  <TableHead>Verified</TableHead>
-                  <TableHead>Premium</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.length > 0 ? (
-                  users.map((user) => (
-                    <TableRow key={user.id} className="hover:bg-muted/50">
-                      <TableCell className="font-medium">
-                        {user.first_name} {user.last_name}
-                      </TableCell>
-                      <TableCell className="text-sm">{user.email}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {user.gender}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {user.is_verified ? (
-                          <Badge className="bg-green-100 text-green-800">Verified</Badge>
-                        ) : (
-                          <Badge variant="secondary">Not Verified</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {user.is_premium ? (
-                          <Badge className="bg-yellow-100 text-yellow-800">Premium</Badge>
-                        ) : (
-                          <Badge variant="outline">Free</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right space-x-2">
-                        {!user.is_verified && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleVerifyUser(user.id)}
-                            className="text-xs"
-                          >
-                            Verify
-                          </Button>
-                        )}
-                        {!user.is_premium && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleMakePremium(user.id)}
-                            className="text-xs"
-                          >
-                            Make Premium
-                          </Button>
-                        )}
+                            {user.approval_status === 'pending' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-2 border-rose-400 text-rose-600 hover:bg-rose-50 hover:text-black font-black gap-2 px-5 py-5 rounded-xl transition-all active:scale-95 shadow-sm"
+                                onClick={() => handleReject(user.id)}
+                              >
+                                <XCircle className="w-4 h-4" />
+                                Reject
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-2 border-orange-400 text-orange-600 hover:bg-orange-50 hover:text-black font-black gap-2 px-5 py-5 rounded-xl transition-all active:scale-95 shadow-sm"
+                              onClick={() => router.push(`/admin/user/${user.id}`)}
+                            >
+                              <Eye className="w-4 h-4" />
+                              View
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-2 border-slate-400 text-slate-600 hover:bg-slate-50 hover:text-black font-black gap-2 px-5 py-5 rounded-xl transition-all active:scale-95 shadow-sm"
+                              onClick={() => handleDelete(user.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Remove
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-24">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center">
+                            <Users className="w-10 h-10 text-slate-200" />
+                          </div>
+                          <p className="text-slate-400 font-bold text-lg">No users found in the system</p>
+                        </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      <AlertCircle className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-muted-foreground">No users found</p>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="flex gap-2 flex-wrap">
-          <Button onClick={fetchAdminData} variant="outline">
-            Refresh Data
-          </Button>
-          <Button variant="outline">Export Users</Button>
-          <Button variant="outline">Send Notification</Button>
-          <Button variant="outline">View Reports</Button>
-        </CardContent>
-      </Card>
-        </TabsContent>
-
-        {/* Users Tab */}
-        <TabsContent value="users" className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>View and manage all user profiles</CardDescription>
-              </div>
-              <Badge variant="outline">{users.length} Total</Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex gap-2">
-                  <Input placeholder="Search users..." className="flex-1 rounded-lg" />
-                  <Button className="bg-primary text-white">Search</Button>
-                </div>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Premium</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.map((user) => (
-                        <TableRow key={user.id} className="hover:bg-muted/30">
-                          <TableCell className="font-medium">{user.first_name} {user.last_name}</TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>
-                            <Badge className={user.is_verified ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}>
-                              {user.is_verified ? "Verified" : "Pending"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={user.is_premium ? "default" : "outline"}>
-                              {user.is_premium ? "Premium" : "Free"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right space-x-2">
-                            <Button size="sm" variant="ghost"><Edit2 className="w-4 h-4" /></Button>
-                            <Button size="sm" variant="ghost" className="text-red-600"><Trash2 className="w-4 h-4" /></Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Blog Tab */}
-        <TabsContent value="blog" className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Blog Management</CardTitle>
-                <CardDescription>Create and manage blog posts</CardDescription>
-              </div>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="bg-gradient-to-r from-primary to-secondary text-white">
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Post
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px]">
-                  <DialogHeader>
-                    <DialogTitle>Create Blog Post</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div><Label>Title</Label><Input placeholder="Blog title" /></div>
-                    <div><Label>Content</Label><Textarea placeholder="Write content..." rows={5} /></div>
-                    <Button className="w-full bg-primary text-white">Publish Post</Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>No blog posts yet. Create your first post!</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Success Stories Tab */}
-        <TabsContent value="stories" className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Success Stories</CardTitle>
-                <CardDescription>Manage success stories and testimonials</CardDescription>
-              </div>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="bg-gradient-to-r from-primary to-secondary text-white">
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Story
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px]">
-                  <DialogHeader>
-                    <DialogTitle>Add Success Story</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div><Label>Couple Name</Label><Input placeholder="Couple name" /></div>
-                    <div><Label>Story</Label><Textarea placeholder="Their success story..." rows={5} /></div>
-                    <Button className="w-full bg-primary text-white">Publish Story</Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <Award className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>No success stories yet. Share the first one!</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Events & News Tab */}
-        <TabsContent value="content" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Events */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Events</CardTitle>
-                  <CardDescription>Manage events and webinars</CardDescription>
-                </div>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="bg-primary text-white">
-                      <Plus className="w-3 h-3" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Create Event</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div><Label>Title</Label><Input placeholder="Event title" /></div>
-                      <div><Label>Date</Label><Input type="date" /></div>
-                      <Button className="w-full bg-primary text-white">Create Event</Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <Calendar className="w-8 h-8 mx-auto mb-3 opacity-50" />
-                  <p className="text-sm">No events yet</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* News */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>News</CardTitle>
-                  <CardDescription>Manage news articles</CardDescription>
-                </div>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="bg-primary text-white">
-                      <Plus className="w-3 h-3" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Create News Article</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div><Label>Title</Label><Input placeholder="News title" /></div>
-                      <div><Label>Content</Label><Textarea placeholder="News content..." rows={4} /></div>
-                      <Button className="w-full bg-primary text-white">Publish News</Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <Newspaper className="w-8 h-8 mx-auto mb-3 opacity-50" />
-                  <p className="text-sm">No news articles yet</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

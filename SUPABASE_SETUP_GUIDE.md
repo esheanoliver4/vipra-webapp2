@@ -33,7 +33,7 @@ Before starting, ensure you have:
 3. Click "New Project"
 
 ### Step 2: Create New Project
-- **Project Name**: VipraPariwaar (or your preferred name)
+- **Project Name**: VipraPariwar (or your preferred name)
 - **Database Password**: Create a strong password (save this!)
 - **Region**: Choose closest to your users
 - **Pricing Plan**: Free or Pro

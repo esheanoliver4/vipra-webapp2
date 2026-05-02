@@ -1,15 +1,21 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 import { getUser } from './auth';
 
-export async function sendMessage(toUserId: string, content: string) {
-  const supabase = await createClient();
-  const user = await getUser();
+async function getServiceRoleClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
-  if (!user) {
-    return { error: 'Not authenticated' };
-  }
+export async function sendMessage(toUserId: string, content: string) {
+  const user = await getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  const supabase = await getServiceRoleClient();
 
   const { error } = await supabase
     .from('messages')
@@ -29,12 +35,10 @@ export async function sendMessage(toUserId: string, content: string) {
 }
 
 export async function getConversation(otherUserId: string) {
-  const supabase = await createClient();
   const user = await getUser();
+  if (!user) return { error: 'Not authenticated' };
 
-  if (!user) {
-    return { error: 'Not authenticated' };
-  }
+  const supabase = await getServiceRoleClient();
 
   const { data, error } = await supabase
     .from('messages')
@@ -52,12 +56,10 @@ export async function getConversation(otherUserId: string) {
 }
 
 export async function getConversations() {
-  const supabase = await createClient();
   const user = await getUser();
+  if (!user) return { error: 'Not authenticated' };
 
-  if (!user) {
-    return { error: 'Not authenticated' };
-  }
+  const supabase = await getServiceRoleClient();
 
   const { data, error } = await supabase
     .from('messages')
@@ -84,12 +86,16 @@ export async function getConversations() {
 }
 
 export async function markAsRead(messageId: string) {
-  const supabase = await createClient();
+  const user = await getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  const supabase = await getServiceRoleClient();
 
   const { error } = await supabase
     .from('messages')
-    .update({ read_at: new Date() })
-    .eq('id', messageId);
+    .update({ is_read: true })
+    .eq('id', messageId)
+    .eq('receiver_id', user.id); // Ensure only the receiver can mark as read
 
   if (error) {
     return { error: error.message };

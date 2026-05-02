@@ -1,4 +1,4 @@
-# VipraPariwaar Signup - Visual & Feature Guide
+# VipraPariwar Signup - Visual & Feature Guide
 
 ## Signup Form Flow
 
@@ -8,7 +8,7 @@ START (Landing Page)
 [Sign Up Button] → /register
   ↓
 ╔════════════════════════════════════════╗
-║  VipraPariwaar Signup - Step 1 of 5   ║
+║  VipraPariwar Signup - Step 1 of 5   ║
 ║                                        ║
 ║  Progress Bar: ████░░░░░░              ║
 ║                                        ║
@@ -30,7 +30,7 @@ START (Landing Page)
 ╚════════════════════════════════════════╝
   ↓
 ╔════════════════════════════════════════╗
-║  VipraPariwaar Signup - Step 2 of 5   ║
+║  VipraPariwar Signup - Step 2 of 5   ║
 ║                                        ║
 ║  Progress Bar: ████████░░░░░░░         ║
 ║                                        ║
@@ -44,7 +44,7 @@ START (Landing Page)
 ╚════════════════════════════════════════╝
   ↓
 ╔════════════════════════════════════════╗
-║  VipraPariwaar Signup - Step 3 of 5   ║
+║  VipraPariwar Signup - Step 3 of 5   ║
 ║                                        ║
 ║  Progress Bar: ████████████░░░░░░      ║
 ║                                        ║
@@ -59,7 +59,7 @@ START (Landing Page)
 ╚════════════════════════════════════════╝
   ↓
 ╔════════════════════════════════════════╗
-║  VipraPariwaar Signup - Step 4 of 5   ║
+║  VipraPariwar Signup - Step 4 of 5   ║
 ║                                        ║
 ║  Progress Bar: ████████████████░░░░░░  ║
 ║                                        ║
@@ -73,7 +73,7 @@ START (Landing Page)
 ╚════════════════════════════════════════╝
   ↓
 ╔════════════════════════════════════════╗
-║  VipraPariwaar Signup - Step 5 of 5   ║
+║  VipraPariwar Signup - Step 5 of 5   ║
 ║                                        ║
 ║  Progress Bar: ████████████████████    ║
 ║                                        ║

@@ -563,3 +563,47 @@ thead {
 .success {
   @apply text-green-600 border-green-200;
 }
+/* CMS Content Styling (Prose) */
+.prose {
+  line-height: 1.75;
+}
+
+.prose h1 {
+  @apply text-3xl font-bold mb-6 text-foreground;
+}
+
+.prose h2 {
+  @apply text-2xl font-semibold mb-4 mt-8 text-foreground;
+}
+
+.prose h3 {
+  @apply text-xl font-medium mb-3 mt-6 text-foreground;
+}
+
+.prose p {
+  @apply mb-4 text-muted-foreground;
+}
+
+.prose ul {
+  @apply list-disc pl-6 mb-6 space-y-2 text-muted-foreground;
+}
+
+.prose ol {
+  @apply list-decimal pl-6 mb-6 space-y-2 text-muted-foreground;
+}
+
+.prose li {
+  @apply pl-1;
+}
+
+.prose a {
+  @apply text-primary font-medium hover:underline;
+}
+
+.prose strong {
+  @apply font-bold text-foreground;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-primary/20 pl-4 italic my-6 text-muted-foreground;
+}

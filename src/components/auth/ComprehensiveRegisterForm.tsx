@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Eye, EyeOff, CheckCircle, XCircle, Loader2, ArrowLeft } from 'lucide-react'
+import { Eye, EyeOff, CheckCircle, XCircle, Loader2, ArrowLeft, Heart, Globe, Info } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import gotras from '@/data/gotras.json'
@@ -48,7 +48,13 @@ export default function ComprehensiveRegisterForm() {
     formState: { errors }
   } = useForm<RegistrationData>({
     resolver: zodResolver(registrationSchema),
-    mode: 'onChange'
+    mode: 'onChange',
+    defaultValues: {
+      siblings: 0,
+      nri: 'no',
+      disability: 'no',
+      maritalStatus: 'Never Married',
+    }
   })
 
   const password = watch('password', '')
@@ -77,16 +83,15 @@ export default function ComprehensiveRegisterForm() {
   }
 
   const handleNextStep = async () => {
-    const fieldsToValidate = currentStep === 1 
-      ? ['name', 'email', 'password', 'confirmPassword']
-      : currentStep === 2
-      ? ['gender', 'dob', 'profileFor']
-      : currentStep === 3
-      ? ['gotra', 'currentPracticedGotra', 'religion', 'caste']
-      : currentStep === 4
-      ? ['city', 'timeOfBirth', 'placeOfBirth']
-      : ['fatherName', 'motherName', 'parentsContactNumber']
+    const fieldsByStep: Record<number, (keyof RegistrationData)[]> = {
+      1: ['name', 'email', 'password', 'confirmPassword'],
+      2: ['gender', 'dob', 'profileFor', 'maritalStatus'],
+      3: ['gotra', 'currentPracticedGotra', 'religion', 'caste', 'motherTongue'],
+      4: ['city', 'timeOfBirth', 'placeOfBirth', 'nri', 'disability'],
+      5: ['fatherName', 'motherName', 'parentsContactNumber', 'siblings', 'profession', 'education']
+    }
 
+    const fieldsToValidate = fieldsByStep[currentStep] || []
     const isValid = await trigger(fieldsToValidate as any)
     if (isValid) {
       if (currentStep < 5) {
@@ -132,15 +137,11 @@ export default function ComprehensiveRegisterForm() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 py-12 px-4">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">
-            Join VipraPariwaar
-          </h1>
-          <p className="text-muted-foreground">Step {currentStep} of {totalSteps}</p>
+          <h1 className="text-4xl font-black text-foreground mb-2">Join VipraPariwar</h1>
+          <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">Step {currentStep} of {totalSteps}</p>
         </div>
 
-        {/* Progress Bar */}
         <div className="mb-8 flex gap-2">
           {Array.from({ length: totalSteps }).map((_, i) => (
             <div
@@ -153,132 +154,43 @@ export default function ComprehensiveRegisterForm() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)}>
-          <Card className="rounded-2xl border-border">
+          <Card className="rounded-2xl border-2 border-slate-900 shadow-none">
             <CardContent className="p-8">
-              {/* Step 1: Basic Info */}
+              {/* Step 1: Basic Account */}
               {currentStep === 1 && (
                 <div className="space-y-6">
-                  <div>
-                    <CardTitle className="mb-6">Create Your Account</CardTitle>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="name" className="mb-2 block">Full Name *</Label>
-                    <Input
-                      id="name"
-                      {...register('name')}
-                      placeholder="Enter your full name"
-                      className="h-11"
-                      disabled={isLoading}
-                    />
-                    {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="email" className="mb-2 block">Email Address *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      {...register('email')}
-                      placeholder="Enter your email"
-                      className="h-11"
-                      disabled={isLoading}
-                    />
-                    {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="password" className="mb-2 block">Password *</Label>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        type={showPassword ? 'text' : 'password'}
-                        {...register('password')}
-                        onChange={(e) => {
-                          register('password').onChange(e)
-                          onPasswordChange(e)
-                        }}
-                        placeholder="Create a strong password"
-                        className="h-11 pr-10"
-                        disabled={isLoading}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                      >
-                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                      </button>
+                  <CardTitle className="text-2xl font-black mb-6">Create Your Account</CardTitle>
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="font-bold mb-1.5 block">Full Name *</Label>
+                      <Input {...register('name')} placeholder="e.g. Nikita Bijawat" className="h-12 border-2" />
+                      {errors.name && <p className="text-red-500 text-xs mt-1 font-bold">{errors.name.message}</p>}
                     </div>
-                    {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
-                    
-                    {/* Password Strength Indicator */}
-                    {password && (
-                      <div className="mt-3 space-y-2">
-                        <div className="flex items-center gap-2">
-                          {passwordStrength.length ? (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                          ) : (
-                            <XCircle className="w-4 h-4 text-red-500" />
-                          )}
-                          <span className="text-sm text-muted-foreground">At least 8 characters</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {passwordStrength.uppercase ? (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                          ) : (
-                            <XCircle className="w-4 h-4 text-red-500" />
-                          )}
-                          <span className="text-sm text-muted-foreground">One uppercase letter</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {passwordStrength.lowercase ? (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                          ) : (
-                            <XCircle className="w-4 h-4 text-red-500" />
-                          )}
-                          <span className="text-sm text-muted-foreground">One lowercase letter</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {passwordStrength.number ? (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                          ) : (
-                            <XCircle className="w-4 h-4 text-red-500" />
-                          )}
-                          <span className="text-sm text-muted-foreground">One number</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {passwordStrength.special ? (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                          ) : (
-                            <XCircle className="w-4 h-4 text-red-500" />
-                          )}
-                          <span className="text-sm text-muted-foreground">One special character (!@#$%^&*)</span>
+                    <div>
+                      <Label className="font-bold mb-1.5 block">Email Address *</Label>
+                      <Input type="email" {...register('email')} placeholder="e.g. name@example.com" className="h-12 border-2" />
+                      {errors.email && <p className="text-red-500 text-xs mt-1 font-bold">{errors.email.message}</p>}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="font-bold mb-1.5 block">Password *</Label>
+                        <div className="relative">
+                          <Input type={showPassword ? 'text' : 'password'} {...register('password')} onChange={(e) => { register('password').onChange(e); onPasswordChange(e); }} placeholder="••••••••" className="h-12 border-2 pr-10" />
+                          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          </button>
                         </div>
                       </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="confirmPassword" className="mb-2 block">Confirm Password *</Label>
-                    <div className="relative">
-                      <Input
-                        id="confirmPassword"
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        {...register('confirmPassword')}
-                        placeholder="Confirm your password"
-                        className="h-11 pr-10"
-                        disabled={isLoading}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                      >
-                        {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                      </button>
+                      <div>
+                        <Label className="font-bold mb-1.5 block">Confirm Password *</Label>
+                        <div className="relative">
+                          <Input type={showConfirmPassword ? 'text' : 'password'} {...register('confirmPassword')} placeholder="••••••••" className="h-12 border-2 pr-10" />
+                          <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                            {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>}
                   </div>
                 </div>
               )}
@@ -286,62 +198,39 @@ export default function ComprehensiveRegisterForm() {
               {/* Step 2: Personal Details */}
               {currentStep === 2 && (
                 <div className="space-y-6">
-                  <div>
-                    <CardTitle className="mb-6">Personal Information</CardTitle>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="gender" className="mb-2 block">Gender *</Label>
-                    <Select
-                      value={watch('gender') || ''}
-                      onValueChange={(value) => setValue('gender', value as any)}
-                      disabled={isLoading}
-                    >
-                      <SelectTrigger className="h-11">
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender.message}</p>}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="dob" className="mb-2 block">Date of Birth (YYYY-MM-DD) *</Label>
-                    <Input
-                      id="dob"
-                      type="date"
-                      {...register('dob')}
-                      className="h-11"
-                      disabled={isLoading}
-                    />
-                    {errors.dob && <p className="text-red-500 text-sm mt-1">{errors.dob.message}</p>}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="profileFor" className="mb-2 block">Profile is for *</Label>
-                    <Select
-                      value={watch('profileFor') || ''}
-                      onValueChange={(value) => setValue('profileFor', value as any)}
-                      disabled={isLoading}
-                    >
-                      <SelectTrigger className="h-11">
-                        <SelectValue placeholder="Select who this profile is for" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="self">Myself</SelectItem>
-                        <SelectItem value="sister">Sister</SelectItem>
-                        <SelectItem value="daughter">Daughter</SelectItem>
-                        <SelectItem value="brother">Brother</SelectItem>
-                        <SelectItem value="son">Son</SelectItem>
-                        <SelectItem value="friend">Friend</SelectItem>
-                        <SelectItem value="relative">Relative</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.profileFor && <p className="text-red-500 text-sm mt-1">{errors.profileFor.message}</p>}
+                  <CardTitle className="text-2xl font-black mb-6">Personal Details</CardTitle>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Gender *</Label>
+                      <Select value={watch('gender') || ''} onValueChange={(v) => setValue('gender', v as any)}>
+                        <SelectTrigger className="h-12 border-2"><SelectValue placeholder="Select" /></SelectTrigger>
+                        <SelectContent><SelectItem value="male">Male</SelectItem><SelectItem value="female">Female</SelectItem></SelectContent>
+                      </Select>
+                      {errors.gender && <p className="text-red-500 text-xs font-bold">{errors.gender.message}</p>}
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Date of Birth *</Label>
+                      <Input type="date" {...register('dob')} className="h-12 border-2" />
+                      {errors.dob && <p className="text-red-500 text-xs font-bold">{errors.dob.message}</p>}
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Profile for *</Label>
+                      <Select value={watch('profileFor') || ''} onValueChange={(v) => setValue('profileFor', v as any)}>
+                        <SelectTrigger className="h-12 border-2"><SelectValue placeholder="Select" /></SelectTrigger>
+                        <SelectContent>
+                          {['self', 'sister', 'daughter', 'brother', 'son', 'friend', 'relative', 'other'].map(v => <SelectItem key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Marital Status *</Label>
+                      <Select value={watch('maritalStatus') || ''} onValueChange={(v) => setValue('maritalStatus', v)}>
+                        <SelectTrigger className="h-12 border-2"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {['Never Married', 'Divorced', 'Widowed', 'Awaiting Divorce'].map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
               )}
@@ -349,234 +238,129 @@ export default function ComprehensiveRegisterForm() {
               {/* Step 3: Brahmin Identity */}
               {currentStep === 3 && (
                 <div className="space-y-6">
-                  <div>
-                    <CardTitle className="mb-6">Brahmin Community Details</CardTitle>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="gotra" className="mb-2 block">Rishi Gotra *</Label>
-                    <Select
-                      value={watch('gotra') || ''}
-                      onValueChange={(value) => setValue('gotra', value)}
-                      disabled={isLoading}
-                    >
-                      <SelectTrigger className="h-11">
-                        <SelectValue placeholder="Select your Rishi Gotra" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-80">
-                        {prioritizedGotras.map((gotra) => (
-                          <SelectItem key={gotra} value={gotra}>
-                            {gotra}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.gotra && <p className="text-red-500 text-sm mt-1">{errors.gotra.message}</p>}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="currentPracticedGotra" className="mb-2 block">Currently Practiced Gotra *</Label>
-                    <Input
-                      id="currentPracticedGotra"
-                      {...register('currentPracticedGotra')}
-                      placeholder="Enter your current practiced gotra"
-                      className="h-11"
-                      disabled={isLoading}
-                    />
-                    {errors.currentPracticedGotra && <p className="text-red-500 text-sm mt-1">{errors.currentPracticedGotra.message}</p>}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="religion" className="mb-2 block">Religion *</Label>
-                    <Input
-                      id="religion"
-                      {...register('religion')}
-                      placeholder="e.g. Hinduism"
-                      className="h-11"
-                      disabled={isLoading}
-                    />
-                    {errors.religion && <p className="text-red-500 text-sm mt-1">{errors.religion.message}</p>}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="caste" className="mb-2 block">Caste *</Label>
-                    <Input
-                      id="caste"
-                      {...register('caste')}
-                      placeholder="e.g. Brahmin"
-                      className="h-11"
-                      disabled={isLoading}
-                    />
-                    {errors.caste && <p className="text-red-500 text-sm mt-1">{errors.caste.message}</p>}
+                  <CardTitle className="text-2xl font-black mb-6">Cultural & Identity</CardTitle>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Rishi Gotra *</Label>
+                      <Select value={watch('gotra') || ''} onValueChange={(v) => setValue('gotra', v)}>
+                        <SelectTrigger className="h-12 border-2"><SelectValue placeholder="Select Gotra" /></SelectTrigger>
+                        <SelectContent className="max-h-60">
+                          {prioritizedGotras.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      {errors.gotra && <p className="text-red-500 text-xs font-bold">{errors.gotra.message}</p>}
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Practiced Gotra *</Label>
+                      <Input {...register('currentPracticedGotra')} placeholder="e.g. Kaushika" className="h-12 border-2" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Religion *</Label>
+                      <Input {...register('religion')} className="h-12 border-2" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Caste *</Label>
+                      <Input {...register('caste')} className="h-12 border-2" />
+                    </div>
+                    <div className="space-y-1.5 md:col-span-2">
+                      <Label className="font-bold">Mother Tongue *</Label>
+                      <Input {...register('motherTongue')} placeholder="e.g. Hindi" className="h-12 border-2" />
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Step 4: Birth & Location */}
+              {/* Step 4: Location & Status */}
               {currentStep === 4 && (
                 <div className="space-y-6">
-                  <div>
-                    <CardTitle className="mb-6">Birth Details</CardTitle>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="city" className="mb-2 block">City *</Label>
-                    <Input
-                      id="city"
-                      {...register('city')}
-                      placeholder="Enter your city"
-                      className="h-11"
-                      disabled={isLoading}
-                    />
-                    {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="timeOfBirth" className="mb-2 block">Time of Birth (HH:MM) *</Label>
-                    <Input
-                      id="timeOfBirth"
-                      type="time"
-                      {...register('timeOfBirth')}
-                      className="h-11"
-                      disabled={isLoading}
-                    />
-                    {errors.timeOfBirth && <p className="text-red-500 text-sm mt-1">{errors.timeOfBirth.message}</p>}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="placeOfBirth" className="mb-2 block">Place of Birth *</Label>
-                    <Input
-                      id="placeOfBirth"
-                      {...register('placeOfBirth')}
-                      placeholder="Enter your place of birth"
-                      className="h-11"
-                      disabled={isLoading}
-                    />
-                    {errors.placeOfBirth && <p className="text-red-500 text-sm mt-1">{errors.placeOfBirth.message}</p>}
+                  <CardTitle className="text-2xl font-black mb-6">Birth & Status</CardTitle>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Current City *</Label>
+                      <Input {...register('city')} className="h-12 border-2" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Place of Birth *</Label>
+                      <Input {...register('placeOfBirth')} className="h-12 border-2" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Time of Birth *</Label>
+                      <Input type="time" {...register('timeOfBirth')} className="h-12 border-2" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">NRI Status</Label>
+                      <Select value={watch('nri') || 'no'} onValueChange={(v) => setValue('nri', v as any)}>
+                        <SelectTrigger className="h-12 border-2"><SelectValue /></SelectTrigger>
+                        <SelectContent><SelectItem value="no">No</SelectItem><SelectItem value="yes">Yes</SelectItem></SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Disability Status</Label>
+                      <Select value={watch('disability') || 'no'} onValueChange={(v) => setValue('disability', v as any)}>
+                        <SelectTrigger className="h-12 border-2"><SelectValue /></SelectTrigger>
+                        <SelectContent><SelectItem value="no">No</SelectItem><SelectItem value="yes">Yes</SelectItem></SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Step 5: Family & Completion */}
+              {/* Step 5: Family & Career */}
               {currentStep === 5 && (
                 <div className="space-y-6">
-                  <div>
-                    <CardTitle className="mb-6">Family Information</CardTitle>
+                  <CardTitle className="text-2xl font-black mb-6">Family & Career</CardTitle>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Father&apos;s Name *</Label>
+                      <Input {...register('fatherName')} className="h-12 border-2" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Mother&apos;s Name *</Label>
+                      <Input {...register('motherName')} className="h-12 border-2" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Parents Contact *</Label>
+                      <Input {...register('parentsContactNumber')} className="h-12 border-2" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Number of Siblings</Label>
+                      <Input type="number" {...register('siblings', { valueAsNumber: true })} className="h-12 border-2" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Education</Label>
+                      <Input {...register('education')} placeholder="e.g. MBA" className="h-12 border-2" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold">Profession</Label>
+                      <Input {...register('profession')} placeholder="e.g. HR Manager" className="h-12 border-2" />
+                    </div>
                   </div>
-
-                  <div>
-                    <Label htmlFor="fatherName" className="mb-2 block">Father's Name *</Label>
-                    <Input
-                      id="fatherName"
-                      {...register('fatherName')}
-                      placeholder="Enter father's name"
-                      className="h-11"
-                      disabled={isLoading}
-                    />
-                    {errors.fatherName && <p className="text-red-500 text-sm mt-1">{errors.fatherName.message}</p>}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="motherName" className="mb-2 block">Mother's Name *</Label>
-                    <Input
-                      id="motherName"
-                      {...register('motherName')}
-                      placeholder="Enter mother's name"
-                      className="h-11"
-                      disabled={isLoading}
-                    />
-                    {errors.motherName && <p className="text-red-500 text-sm mt-1">{errors.motherName.message}</p>}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="parentsContactNumber" className="mb-2 block">Parents' Contact Number *</Label>
-                    <Input
-                      id="parentsContactNumber"
-                      {...register('parentsContactNumber')}
-                      placeholder="Enter contact number"
-                      className="h-11"
-                      disabled={isLoading}
-                    />
-                    {errors.parentsContactNumber && <p className="text-red-500 text-sm mt-1">{errors.parentsContactNumber.message}</p>}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="education" className="mb-2 block">Education</Label>
-                    <Input
-                      id="education"
-                      {...register('education')}
-                      placeholder="e.g. B.Tech, M.Com"
-                      className="h-11"
-                      disabled={isLoading}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="profession" className="mb-2 block">Profession</Label>
-                    <Input
-                      id="profession"
-                      {...register('profession')}
-                      placeholder="e.g. Software Engineer, Doctor"
-                      className="h-11"
-                      disabled={isLoading}
-                    />
-                  </div>
-
-                  <div className="border-t pt-6">
+                  <div className="pt-6 border-t">
                     <div className="flex items-start gap-3">
-                      <Checkbox
-                        id="terms"
-                        checked={isTermsAgreed}
-                        onCheckedChange={(checked) => setIsTermsAgreed(checked as boolean)}
-                        disabled={isLoading}
-                      />
-                      <label htmlFor="terms" className="text-sm text-muted-foreground cursor-pointer">
-                        I agree to the terms and conditions and privacy policy of VipraPariwaar
+                      <Checkbox id="terms" checked={isTermsAgreed} onCheckedChange={(v) => setIsTermsAgreed(v as boolean)} />
+                      <label htmlFor="terms" className="text-xs font-bold text-slate-500 leading-tight">
+                        I agree to the terms and conditions and privacy policy of VipraPariwar.
                       </label>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Navigation Buttons */}
-              <div className="flex gap-4 mt-8">
+              {/* Actions */}
+              <div className="flex gap-4 mt-10">
                 {currentStep > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setCurrentStep(currentStep - 1)}
-                    disabled={isLoading}
-                    className="flex-1"
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back
+                  <Button type="button" variant="outline" onClick={() => setCurrentStep(currentStep - 1)} className="flex-1 h-12 border-2 font-black uppercase tracking-widest text-xs">
+                    <ArrowLeft className="w-4 h-4 mr-2" /> Back
                   </Button>
                 )}
-                {currentStep < totalSteps ? (
-                  <Button
-                    type="button"
-                    onClick={handleNextStep}
-                    disabled={isLoading}
-                    className="flex-1 bg-primary hover:bg-primary/90"
-                  >
-                    Next
-                  </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    disabled={isLoading || !isTermsAgreed}
-                    className="flex-1 bg-primary hover:bg-primary/90"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Creating Account...
-                      </>
-                    ) : (
-                      'Complete Registration'
-                    )}
-                  </Button>
-                )}
+                <Button 
+                  type={currentStep === totalSteps ? 'submit' : 'button'} 
+                  onClick={currentStep < totalSteps ? handleNextStep : undefined}
+                  disabled={isLoading || (currentStep === totalSteps && !isTermsAgreed)} 
+                  className="flex-1 h-12 bg-primary hover:bg-primary font-black uppercase tracking-widest text-xs"
+                >
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : (currentStep === totalSteps ? 'Complete Registration' : 'Next Step')}
+                </Button>
               </div>
             </CardContent>
           </Card>

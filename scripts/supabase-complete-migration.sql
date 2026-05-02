@@ -258,7 +258,7 @@ CREATE INDEX idx_blog_posts_published ON public.blog_posts(published);
 INSERT INTO public.users (
   email, first_name, last_name, role, is_verified, is_approved, approval_status
 ) VALUES (
-  'admin@viprepariwaar.com',
+  'admin@viprepariwar.com',
   'Admin',
   'User',
   'admin',

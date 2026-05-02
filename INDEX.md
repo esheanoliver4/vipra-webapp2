@@ -1,4 +1,4 @@
-# VipraPariwaar - Complete Documentation Index
+# VipraPariwar - Complete Documentation Index
 
 ## Quick Navigation
 
@@ -109,7 +109,7 @@
 ## File Structure
 
 ```
-VipraPariwaar/
+VipraPariwar/
 ├── src/
 │   ├── app/
 │   │   ├── (auth)/          # Auth pages

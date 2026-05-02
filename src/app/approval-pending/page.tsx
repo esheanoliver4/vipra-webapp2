@@ -5,8 +5,8 @@ import { Clock } from 'lucide-react';
 
 export default function ApprovalPendingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-red-50 to-white flex items-center justify-center px-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-[calc(100vh-64px)] bg-gradient-to-b from-red-50 to-white flex items-start justify-center px-4 py-12">
+      <Card className="w-full max-w-[380px] shadow-xl border-none">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <div className="relative">

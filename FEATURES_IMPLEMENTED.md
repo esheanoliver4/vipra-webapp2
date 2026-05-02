@@ -1,6 +1,6 @@
-# VipraPariwaar - New Features Implementation Guide
+# VipraPariwar - New Features Implementation Guide
 
-This document outlines all the new features that have been added to the VipraPariwaar platform.
+This document outlines all the new features that have been added to the VipraPariwar platform.
 
 ---
 

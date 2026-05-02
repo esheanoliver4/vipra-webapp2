@@ -46,7 +46,7 @@ export default function BrahminCulture() {
               Celebrating Brahmin Community & Tradition
             </h2>
             <p className="text-lg text-muted-foreground mb-6">
-              VipraPariwaar is dedicated to serving the Brahmin community with authenticity and respect. We understand the importance of cultural values, family involvement, and traditional practices in matrimony.
+              VipraPariwar is dedicated to serving the Brahmin community with authenticity and respect. We understand the importance of cultural values, family involvement, and traditional practices in matrimony.
             </p>
             <p className="text-lg text-muted-foreground mb-6">
               Our platform brings together educated, values-driven individuals who wish to build lifelong partnerships rooted in shared culture, faith, and family principles.
@@ -89,7 +89,7 @@ export default function BrahminCulture() {
           <div className="text-center mb-12">
             <h3 className="text-3xl font-bold text-foreground mb-4">Our Core Values</h3>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              What makes VipraPariwaar the trusted choice for Brahmin matrimony
+              What makes VipraPariwar the trusted choice for Brahmin matrimony
             </p>
           </div>
 
@@ -129,7 +129,7 @@ export default function BrahminCulture() {
                 From Connection to Marriage
               </h3>
               <p className="text-lg text-muted-foreground mb-6">
-                Every successful match on VipraPariwaar is a beautiful story of two families coming together. We provide a platform where connections turn into lifelong partnerships, honoring every step of the traditional matrimonial journey.
+                Every successful match on VipraPariwar is a beautiful story of two families coming together. We provide a platform where connections turn into lifelong partnerships, honoring every step of the traditional matrimonial journey.
               </p>
               <div className="space-y-4">
                 <div className="flex gap-4">

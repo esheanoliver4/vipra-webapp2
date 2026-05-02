@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Mail } from 'lucide-react';
 
 export const metadata = {
-  title: 'Press & Media - VipraPariwaar',
-  description: 'Press releases, media kits, and news coverage of VipraPariwaar.',
+  title: 'Press & Media - VipraPariwar',
+  description: 'Press releases, media kits, and news coverage of VipraPariwar.',
 };
 
 export default function PressPage() {
@@ -12,7 +12,7 @@ export default function PressPage() {
     {
       publisher: "TechCrunch",
       date: "August 2023",
-      title: "VipraPariwaar redefines traditional matchmaking with modern technology"
+      title: "VipraPariwar redefines traditional matchmaking with modern technology"
     },
     {
       publisher: "The Times of India",
@@ -27,7 +27,7 @@ export default function PressPage() {
         <div className="mb-16 text-center">
           <h1 className="text-5xl font-bold text-foreground mb-4">Press & Media</h1>
           <p className="text-xl text-muted-foreground mb-6">
-            Latest news, announcements, and press resources from VipraPariwaar.
+            Latest news, announcements, and press resources from VipraPariwar.
           </p>
         </div>
 
@@ -36,10 +36,10 @@ export default function PressPage() {
             <h2 className="text-2xl font-bold mb-2">Media Inquiries</h2>
             <p className="text-muted-foreground">For press inquiries, interview requests, or media assets, please reach out to our PR team.</p>
           </div>
-          <a href="mailto:press@viprapariwaar.com">
+          <a href="mailto:press@viprapariwar.com">
             <Button className="bg-primary hover:bg-primary/90 text-white font-bold px-8">
               <Mail className="w-4 h-4 mr-2" />
-              press@viprapariwaar.com
+              press@viprapariwar.com
             </Button>
           </a>
         </div>

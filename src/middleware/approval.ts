@@ -6,7 +6,6 @@ const protectedRoutes = [
   '/connections',
   '/messages',
   '/dashboard',
-  '/edit-profile',
   '/your-profile',
   '/kundli-milan',
 ];

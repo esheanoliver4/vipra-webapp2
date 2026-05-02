@@ -175,7 +175,7 @@ export default function ReferralDashboard({ userId }: { userId: string }) {
                 </DialogContent>
               </Dialog>
               <Button
-                onClick={() => window.open(`https://twitter.com/intent/tweet?text=Join me on VipraPariwaar! Use code ${referralCode}`)}
+                onClick={() => window.open(`https://twitter.com/intent/tweet?text=Join me on VipraPariwar! Use code ${referralCode}`)}
                 variant="outline"
                 className="rounded-xl h-12 border-primary/30 hover:border-primary"
               >

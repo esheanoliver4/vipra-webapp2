@@ -7,7 +7,7 @@
 1. Go to https://app.supabase.com
 2. Click "New Project"
 3. Fill in details:
-   - Name: VipraPariwaar
+   - Name: VipraPariwar
    - Password: Your_Strong_Password_123
    - Region: Closest to you
 4. Wait for initialization

@@ -3,7 +3,7 @@ import { getUser } from '@/lib/auth-server';
 import ReferralDashboard from '@/components/referral/ReferralDashboard';
 
 export const metadata = {
-  title: 'Refer & Earn - VipraPariwaar',
+  title: 'Refer & Earn - VipraPariwar',
   description: 'Invite friends and earn rewards for every successful match in your network',
 };
 

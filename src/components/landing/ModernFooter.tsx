@@ -51,7 +51,7 @@ export default function ModernFooter() {
               </span>
             </div>
             <p className="text-muted-foreground text-sm leading-relaxed mb-2">
-              VipraPariwaar is dedicated to the Brahmin community
+              VipraPariwar is dedicated to the Brahmin community
             </p>
             <p className="text-muted-foreground text-sm leading-relaxed mb-6">
               Connecting hearts, honoring traditions, building families.

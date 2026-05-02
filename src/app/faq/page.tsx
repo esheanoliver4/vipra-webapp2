@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 const faqs = [
   {
-    question: 'How do I create a profile on VipraPariwaar?',
+    question: 'How do I create a profile on VipraPariwar?',
     answer: 'Simply sign up with your email, fill in your basic details, upload a photo, and complete your profile with your preferences and family information. Our team will verify your details within 24-48 hours.'
   },
   {
@@ -37,8 +37,8 @@ const faqs = [
 ];
 
 export const metadata = {
-  title: 'FAQ - Frequently Asked Questions | VipraPariwaar',
-  description: 'Find answers to common questions about VipraPariwaar matrimony platform',
+  title: 'FAQ - Frequently Asked Questions | VipraPariwar',
+  description: 'Find answers to common questions about VipraPariwar matrimony platform',
 };
 
 export default function FAQPage() {
@@ -48,7 +48,7 @@ export default function FAQPage() {
         <div className="mb-12 text-center">
           <h1 className="text-4xl font-bold text-foreground mb-3">Frequently Asked Questions</h1>
           <p className="text-lg text-muted-foreground">
-            Find answers to common questions about VipraPariwaar
+            Find answers to common questions about VipraPariwar
           </p>
         </div>
 

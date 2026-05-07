@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProfileCard from './ProfileCard';
+import Link from 'next/link';
+import { getProfileContact } from '@/lib/actions/auth';
+import { calculateAge } from '@/lib/utils';
 
 export interface ProfileImage {
   id: string;
@@ -27,6 +30,8 @@ export interface Profile {
   bio?: string;
   gotra?: string;
   religion?: string;
+  email?: string;
+  parents_contact_number?: string;
   profileImages?: ProfileImage[];
 }
 
@@ -35,6 +40,7 @@ interface CardStackProps {
   onLike: (profileId: string) => void;
   onDislike: (profileId: string) => void;
   isLoading?: boolean;
+  isPremium?: boolean;
 }
 
 export default function CardStack({
@@ -42,26 +48,33 @@ export default function CardStack({
   onLike,
   onDislike,
   isLoading = false,
+  isPremium = false,
 }: CardStackProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState<'left' | 'right' | null>(null);
   const [imageIndex, setImageIndex] = useState(0);
+  const [contactInfo, setContactInfo] = useState<{ email?: string; parents_contact_number?: string } | null>(null);
 
   const currentProfile = profiles[currentIndex];
   const currentImages = currentProfile?.profileImages || (currentProfile?.profile_image_url ? [{ id: '1', image_url: currentProfile.profile_image_url, order: 0, is_primary: true }] : []);
 
-  const calculateAge = (dateOfBirth: string) => {
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+  useEffect(() => {
+    if (isPremium && currentProfile?.id) {
+      loadContact();
     }
-    
-    return age;
-  };
+  }, [currentIndex, isPremium, currentProfile?.id]);
+
+  async function loadContact() {
+    try {
+      const result = await getProfileContact(currentProfile.id);
+      if (result.data) {
+        setContactInfo(result.data);
+      }
+    } catch (error) {
+      console.error('Error loading contact:', error);
+    }
+  }
+
 
   const handleLike = () => {
     setDirection('right');
@@ -255,6 +268,36 @@ export default function CardStack({
                     <span className="text-gray-600">👨‍👩‍👧‍👦 {currentProfile.gotra}</span>
                   </div>
                 )}
+              </div>
+
+              {/* Contact Info - Premium Only */}
+              <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500 flex items-center gap-1.5">
+                    📧 Email
+                  </span>
+                  <span className="font-semibold text-slate-900">
+                    {isPremium ? (contactInfo?.email || 'Loading...') : (
+                      <span className="flex items-center gap-2">
+                        {currentProfile.email?.replace(/(.{3})(.*)(@.*)/, '$1***$3') || '***@***.com'}
+                        <Link href="/subscription" className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded uppercase font-bold">Upgrade</Link>
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500 flex items-center gap-1.5">
+                    📞 Contact
+                  </span>
+                  <span className="font-semibold text-slate-900">
+                    {isPremium ? (contactInfo?.parents_contact_number || 'Loading...') : (
+                      <span className="flex items-center gap-2">
+                        {currentProfile.parents_contact_number?.replace(/(.{2})(.*)(.{2})/, '$1******$3') || '**********'}
+                        <Link href="/subscription" className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded uppercase font-bold">Upgrade</Link>
+                      </span>
+                    )}
+                  </span>
+                </div>
               </div>
 
               {/* Action Buttons */}

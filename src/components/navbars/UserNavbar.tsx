@@ -52,6 +52,11 @@ export default function UserNavbar() {
 
             <Link href="/connections" title="Connections">
               <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 transition-colors relative">
+                <Users className="w-5 h-5" />
+              </Button>
+            </Link>
+            <Link href="/liked" title="Liked Profiles">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 transition-colors relative">
                 <Heart className="w-5 h-5" />
               </Button>
             </Link>
@@ -85,7 +90,7 @@ export default function UserNavbar() {
 
           {/* Mobile Navigation Toggle */}
           <div className="sm:hidden flex mobile-nav-container items-center gap-2">
-            <Link href="/connections">
+            <Link href="/liked">
               <Button variant="ghost" size="icon" className="text-white">
                 <Heart className="w-5 h-5" />
               </Button>
@@ -116,6 +121,12 @@ export default function UserNavbar() {
             <Link href="/dashboard" onClick={() => setIsOpen(false)}>
               <Button variant="ghost" className="w-full justify-start text-lg font-semibold text-white hover:bg-white/20">
                 Dashboard
+              </Button>
+            </Link>
+            <Link href="/liked" onClick={() => setIsOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start text-lg font-semibold text-white hover:bg-white/20">
+                <Heart className="w-5 h-5 mr-2" />
+                Liked Profiles
               </Button>
             </Link>
             <Link href="/settings" onClick={() => setIsOpen(false)}>

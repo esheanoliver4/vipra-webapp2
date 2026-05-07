@@ -17,11 +17,20 @@ export async function sendMessage(toUserId: string, content: string) {
 
   const supabase = await getServiceRoleClient();
 
+  // Get internal user ID
+  const { data: profile } = await supabase
+    .from('users')
+    .select('id')
+    .eq('auth_id', user.id)
+    .single();
+
+  if (!profile) return { error: 'Profile not found' };
+
   const { error } = await supabase
     .from('messages')
     .insert([
       {
-        sender_id: user.id,
+        sender_id: profile.id,
         receiver_id: toUserId,
         content,
       },
@@ -40,11 +49,20 @@ export async function getConversation(otherUserId: string) {
 
   const supabase = await getServiceRoleClient();
 
+  // Get internal user ID
+  const { data: profile } = await supabase
+    .from('users')
+    .select('id')
+    .eq('auth_id', user.id)
+    .single();
+
+  if (!profile) return { error: 'Profile not found' };
+
   const { data, error } = await supabase
     .from('messages')
     .select('*')
     .or(
-      `and(sender_id.eq.${user.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${user.id})`
+      `and(sender_id.eq.${profile.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${profile.id})`
     )
     .order('created_at', { ascending: true });
 
@@ -61,11 +79,20 @@ export async function getConversations() {
 
   const supabase = await getServiceRoleClient();
 
+  // Get internal user ID
+  const { data: profile } = await supabase
+    .from('users')
+    .select('id')
+    .eq('auth_id', user.id)
+    .single();
+
+  if (!profile) return { error: 'Profile not found' };
+
   const { data, error } = await supabase
     .from('messages')
     .select('*')
     .or(
-      `sender_id.eq.${user.id},receiver_id.eq.${user.id}`
+      `sender_id.eq.${profile.id},receiver_id.eq.${profile.id}`
     )
     .order('created_at', { ascending: false });
 
@@ -76,7 +103,7 @@ export async function getConversations() {
   // Group by conversation partner
   const conversations = new Map();
   data?.forEach((message) => {
-    const partnerId = message.sender_id === user.id ? message.receiver_id : message.sender_id;
+    const partnerId = message.sender_id === profile.id ? message.receiver_id : message.sender_id;
     if (!conversations.has(partnerId)) {
       conversations.set(partnerId, message);
     }
@@ -91,11 +118,20 @@ export async function markAsRead(messageId: string) {
 
   const supabase = await getServiceRoleClient();
 
+  // Get internal user ID
+  const { data: profile } = await supabase
+    .from('users')
+    .select('id')
+    .eq('auth_id', user.id)
+    .single();
+
+  if (!profile) return { error: 'Profile not found' };
+
   const { error } = await supabase
     .from('messages')
     .update({ is_read: true })
     .eq('id', messageId)
-    .eq('receiver_id', user.id); // Ensure only the receiver can mark as read
+    .eq('receiver_id', profile.id); // Ensure only the receiver can mark as read
 
   if (error) {
     return { error: error.message };

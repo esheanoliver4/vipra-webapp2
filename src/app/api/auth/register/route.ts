@@ -1,7 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { sendApprovalEmail, sendAdminNotificationEmail } from '@/lib/email-service';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
+  // 0. Rate limiting (5 registrations per 15 minutes)
+  const rl = await rateLimit(request, { limit: 5, windowMs: 15 * 60 * 1000 });
+  if (!rl.success) {
+    return NextResponse.json(
+      { message: `Too many registration attempts. Please try again in ${rl.resetInSeconds} seconds.` },
+      { status: 429 }
+    );
+  }
+
   try {
     const {
       name,
@@ -150,6 +161,18 @@ export async function POST(request: NextRequest) {
 
     if (logError) {
       console.warn('[v0] Approval log creation warning:', logError);
+    }
+
+    // Send notification emails
+    if (userData) {
+      // 1. Notify the user
+      await sendApprovalEmail(userData.email, userData.first_name, 'pending');
+      
+      // 2. Notify the admin
+      const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
+      if (adminEmail) {
+        await sendAdminNotificationEmail(adminEmail, `${userData.first_name} ${userData.last_name}`, userData.email);
+      }
     }
 
     return NextResponse.json(

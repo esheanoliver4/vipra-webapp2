@@ -33,7 +33,8 @@ export default function Navbar() {
     '/settings', 
     '/profile',
     '/approval-pending',
-    '/subscription'
+    '/subscription',
+    '/liked'
   ];
   if (userRoutes.some(route => pathname?.startsWith(route))) {
     return <UserNavbar />;

@@ -42,11 +42,65 @@ export default function MessagesClient() {
   const [sending, setSending] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userProfiles, setUserProfiles] = useState<{ [key: string]: UserProfile }>({});
+  const [searchQuery, setSearchQuery] = useState('');
   const supabase = createClient();
 
   useEffect(() => {
     loadConversations();
   }, []);
+
+  useEffect(() => {
+    if (!currentUser?.id) return;
+
+    // Get internal profile ID first for accurate filtering
+    let profileId: string;
+    
+    async function setupRealtime() {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_id', currentUser.id)
+        .single();
+        
+      if (!profile) return;
+      profileId = profile.id;
+
+      const channel = supabase
+        .channel('realtime_messages')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+          },
+          (payload) => {
+            const newMessage = payload.new as Message;
+            
+            // If message is for us
+            if (newMessage.receiver_id === profileId) {
+              // If it's from the person we are currently chatting with
+              if (selectedConversation === newMessage.sender_id) {
+                setMessages((prev) => {
+                  // Prevent duplicates if handleSendMessage also added it
+                  if (prev.some(m => m.id === newMessage.id)) return prev;
+                  return [...prev, newMessage];
+                });
+              }
+              // Always refresh conversation list to show new message preview
+              loadConversations();
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+
+    setupRealtime();
+  }, [currentUser?.id, selectedConversation]);
 
   useEffect(() => {
     if (selectedConversation && currentUser) {
@@ -120,7 +174,10 @@ export default function MessagesClient() {
       const result = await sendMessage(selectedConversation, messageText);
       if (result.success) {
         setMessageText('');
+        // Realtime will handle adding the message if it's an incoming one, 
+        // but for our own sent messages, we should refresh to see it immediately
         await loadMessages(selectedConversation);
+        await loadConversations(); // Update the sidebar preview
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -165,6 +222,8 @@ export default function MessagesClient() {
                   <Input
                     placeholder="Search conversations..."
                     className="pl-10 h-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
               </CardHeader>
@@ -182,7 +241,13 @@ export default function MessagesClient() {
                       <p className="text-xs text-muted-foreground/70 mt-2">Start by liking a profile</p>
                     </motion.div>
                   ) : (
-                    conversations.map((conv, idx) => {
+                    conversations
+                      .filter(conv => {
+                        const partnerId = conv.sender_id === currentUser?.id ? conv.receiver_id : conv.sender_id;
+                        const profile = userProfiles[partnerId];
+                        return profile?.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
+                      })
+                      .map((conv, idx) => {
                       const partnerId =
                         conv.sender_id === currentUser?.id
                           ? conv.receiver_id
@@ -250,9 +315,6 @@ export default function MessagesClient() {
                         <p className="text-xs text-muted-foreground">Active now</p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon">
-                      <MoreVertical className="w-5 h-5" />
-                    </Button>
                   </CardHeader>
 
                   {/* Messages Container */}
@@ -289,10 +351,7 @@ export default function MessagesClient() {
                   {/* Message Input */}
                   <div className="border-t border-border/50 p-4 bg-background">
                     <div className="flex gap-3 items-end">
-                      <Button variant="ghost" size="icon" className="flex-shrink-0">
-                        <Paperclip className="w-5 h-5" />
-                      </Button>
-                      <div className="flex-1 relative">
+                      <div className="flex-1">
                         <Input
                           placeholder="Type a message..."
                           value={messageText}
@@ -303,15 +362,8 @@ export default function MessagesClient() {
                               handleSendMessage();
                             }
                           }}
-                          className="pr-10 h-11 rounded-full"
+                          className="h-11 rounded-full"
                         />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-1 top-1/2 -translate-y-1/2"
-                        >
-                          <Smile className="w-5 h-5" />
-                        </Button>
                       </div>
                       <Button
                         onClick={handleSendMessage}

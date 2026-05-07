@@ -43,7 +43,9 @@ export async function getUser() {
     } = await supabase.auth.getUser();
 
     if (error) {
-      console.error("Error fetching user:", error.message);
+      if (error.message !== 'Auth session missing!') {
+        console.error("Error fetching user:", error.message);
+      }
       return null;
     }
 

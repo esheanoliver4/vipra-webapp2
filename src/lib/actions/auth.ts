@@ -336,7 +336,21 @@ export async function getBrowseProfiles(filters: {
   let query = supabase
     .from('users')
     .select(`
-      *,
+      id,
+      first_name,
+      last_name,
+      gender,
+      date_of_birth,
+      age,
+      location_city,
+      location_state,
+      profession,
+      education,
+      marital_status,
+      mother_tongue,
+      hobbies,
+      short_bio,
+      bio,
       profile_images(
         image_url,
         is_primary
@@ -353,8 +367,14 @@ export async function getBrowseProfiles(filters: {
     query = query.not('id', 'in', `(${excludeArray.join(',')})`);
   }
 
-  if (filters.gender && filters.gender !== 'all') {
-    query = query.eq('gender', filters.gender);
+  // Default to opposite gender if not specified
+  let targetGender: string | undefined = filters.gender;
+  if (!targetGender || targetGender === 'all') {
+    targetGender = currentUserProfile.gender?.toLowerCase() === 'male' ? 'female' : 'male';
+  }
+
+  if (targetGender && targetGender !== 'all') {
+    query = query.eq('gender', targetGender);
   }
 
   const { data, error } = await query.limit(100);
@@ -372,6 +392,54 @@ export async function getBrowseProfiles(filters: {
   });
 
   return { success: true, data: filteredData };
+}
+
+export async function getLikedProfiles() {
+  const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
+  const user = await getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  const supabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('id')
+    .eq('auth_id', user.id)
+    .single();
+
+  if (!profile) return { error: 'Profile not found' };
+
+  const { data, error } = await supabase
+    .from('likes')
+    .select(`
+      liked_user_id,
+      liked_user:users!liked_user_id (
+        id,
+        first_name,
+        last_name,
+        gender,
+        date_of_birth,
+        location_city,
+        profession,
+        profile_images (
+          image_url,
+          is_primary
+        )
+      )
+    `)
+    .eq('user_id', profile.id)
+    .eq('action', 'like')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching liked profiles:', error);
+    return { error: error.message };
+  }
+
+  return { success: true, data: data.map(item => item.liked_user) };
 }
 
 export async function deleteUserAccount() {
@@ -486,4 +554,35 @@ export async function deleteFamilyMember(id: string) {
 
   if (error) return { error: error.message };
   return { success: true };
+}
+
+export async function getProfileContact(targetProfileId: string) {
+  const user = await getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  const supabase = await createClient();
+
+  // 1. Check if the current user is premium
+  const { data: currentUser, error: profileError } = await supabase
+    .from('users')
+    .select('is_premium')
+    .eq('auth_id', user.id)
+    .single();
+
+  if (profileError || !currentUser?.is_premium) {
+    return { error: 'Upgrade to premium to view contact details' };
+  }
+
+  // 2. Fetch the contact info
+  const { data: targetProfile, error: fetchError } = await supabase
+    .from('users')
+    .select('email, parents_contact_number')
+    .eq('id', targetProfileId)
+    .single();
+
+  if (fetchError || !targetProfile) {
+    return { error: 'Profile not found' };
+  }
+
+  return { data: targetProfile };
 }

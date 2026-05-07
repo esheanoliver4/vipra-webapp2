@@ -1,14 +1,14 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getUser, getUserProfile } from '@/lib/auth-server';
-import CMSClient from '@/components/admin/CMSClient';
+import PaymentsClient from '@/components/admin/PaymentsClient';
 
 export const metadata: Metadata = {
-  title: 'Content Management | Admin Panel',
-  description: 'Manage static pages and blog content',
+  title: 'Payment Verification | Admin Panel',
+  description: 'Approve or reject premium subscription payments',
 };
 
-export default async function CMSPage() {
+export default async function AdminPaymentsPage() {
   const user = await getUser();
   
   if (!user) {
@@ -20,5 +20,9 @@ export default async function CMSPage() {
     redirect('/dashboard');
   }
 
-  return <CMSClient />;
+  return (
+    <main className="min-h-screen bg-background">
+      <PaymentsClient />
+    </main>
+  );
 }

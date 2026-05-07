@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
     const authHeader = request.headers.get('authorization');
     let currentUserId: string | null = null;
     let currentUserGotra: string | null = null;
+    let currentUserGender: string | null = null;
 
     if (authHeader) {
       const token = authHeader.replace('Bearer ', '');
@@ -19,11 +20,12 @@ export async function GET(request: NextRequest) {
       if (!authError && authData.user) {
         const { data: user } = await supabase
           .from('users')
-          .select('id, gotra')
+          .select('id, gotra, gender')
           .eq('auth_id', authData.user.id)
           .single();
         currentUserId = user?.id || null;
         currentUserGotra = user?.gotra || null;
+        currentUserGender = user?.gender || null;
       }
     }
 
@@ -64,7 +66,11 @@ export async function GET(request: NextRequest) {
 
     // Apply filters
     if (gender) {
-      query = query.eq('gender', gender === 'male' ? 'female' : 'male'); // Show opposite gender
+      // If gender is explicitly requested via search params, use it
+      query = query.eq('gender', gender.toLowerCase());
+    } else if (currentUserGender) {
+      // Otherwise default to opposite of current user
+      query = query.eq('gender', currentUserGender.toLowerCase() === 'male' ? 'female' : 'male');
     }
 
     if (city) {

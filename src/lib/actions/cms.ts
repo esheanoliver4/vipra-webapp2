@@ -267,27 +267,13 @@ export async function submitPaymentRequest(paymentData: {
       plan_id: paymentData.plan_id,
       transaction_id: paymentData.transaction_id,
       amount: paymentData.amount,
-      status: 'completed' // Marked as completed since we give instant access
+      status: 'pending' // Force to pending for admin verification
     }]);
 
   if (requestError) {
     if (requestError.code === '23505') return { error: 'This transaction ID has already been submitted.' };
     return { error: requestError.message };
   }
-
-  // GIVE INSTANT ACCESS as requested by user
-  const { error: updateError } = await supabase
-    .from('users')
-    .update({
-      is_premium: true,
-      premium_plan: planRes.data.name,
-      premium_plan_id: paymentData.plan_id,
-      payment_status: true,
-      payment_id: paymentData.transaction_id
-    })
-    .eq('id', profileRes.data.id);
-
-  if (updateError) return { error: updateError.message };
 
   return { success: true };
 }

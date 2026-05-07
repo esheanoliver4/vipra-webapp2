@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/auth-client';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginForm() {
   const [loading, setLoading] = useState(false);
@@ -18,6 +19,7 @@ export default function LoginForm() {
     password: '',
     rememberMe: false
   });
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -105,15 +107,29 @@ export default function LoginForm() {
                 Forgot password?
               </Link>
             </div>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              value={formData.password}
-              onChange={(e) => handleChange('password', e.target.value)}
-              disabled={loading}
-              className="rounded-lg border-2 border-red-200 focus:border-red-500 focus:ring-2 focus:ring-red-300 transition-all duration-300"
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={(e) => handleChange('password', e.target.value)}
+                disabled={loading}
+                className="rounded-lg border-2 border-red-200 focus:border-red-500 focus:ring-2 focus:ring-red-300 transition-all duration-300 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-red-400 hover:text-red-600 focus:outline-none transition-colors"
+                disabled={loading}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">

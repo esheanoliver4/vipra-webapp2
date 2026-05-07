@@ -17,11 +17,32 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    let query = supabase.from('profiles').select('*').eq('is_verified', true);
+    // Get current user to determine opposite gender if no gender filter is provided
+    let currentUserGender: string | null = null;
+    const authHeader = request.headers.get('authorization');
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '');
+      const { data: authData } = await supabase.auth.getUser(token);
+      if (authData.user) {
+        const { data: user } = await supabase
+          .from('users')
+          .select('gender')
+          .eq('auth_id', authData.user.id)
+          .single();
+        currentUserGender = user?.gender || null;
+      }
+    }
 
-    if (gender) query = query.eq('gender', gender);
-    if (caste) query = query.eq('caste', caste);
-    if (city) query = query.ilike('city', `%${city}%`);
+    let query = supabase.from('users').select('*').eq('is_approved', true).neq('role', 'admin');
+
+    if (gender) {
+      query = query.eq('gender', gender);
+    } else if (currentUserGender) {
+      query = query.eq('gender', currentUserGender.toLowerCase() === 'male' ? 'female' : 'male');
+    }
+
+    if (caste) query = query.eq('gotra', caste); // Using gotra as caste for consistency
+    if (city) query = query.ilike('location_city', `%${city}%`);
 
     if (minAge) {
       const minDateOfBirth = new Date();

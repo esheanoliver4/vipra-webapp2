@@ -11,6 +11,7 @@ export default function BrowseClient() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [gender, setGender] = useState<'male' | 'female' | 'all'>('all');
+  const [isPremium, setIsPremium] = useState(false);
 
   const supabase = createClient();
 
@@ -22,6 +23,16 @@ export default function BrowseClient() {
     try {
       setIsLoading(true);
       
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('is_premium')
+          .eq('auth_id', authUser.id)
+          .single();
+        setIsPremium(!!profile?.is_premium);
+      }
+
       const result = await getBrowseProfiles({ gender });
 
       if (result.error) {
@@ -50,6 +61,8 @@ export default function BrowseClient() {
           occupation: user.profession || user.occupation || '',
           gotra: userGotra || user.gotra || '',
           religion: user.religion || '',
+          email: user.email || '',
+          parents_contact_number: user.parents_contact_number || '',
         };
       });
 
@@ -125,6 +138,7 @@ export default function BrowseClient() {
               onLike={handleLike}
               onDislike={handleDislike}
               isLoading={isLoading}
+              isPremium={isPremium}
             />
           </div>
         )}

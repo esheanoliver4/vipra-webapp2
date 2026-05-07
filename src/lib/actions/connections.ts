@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { getUser } from './auth';
+import { sendConnectionNotification } from '@/lib/email-service';
 
 export async function sendConnectionRequest(toUserId: string, message?: string) {
   const supabase = await createClient();
@@ -57,6 +58,22 @@ export async function sendConnectionRequest(toUserId: string, message?: string) 
     .from('users')
     .update({ connections_sent_count: currentCount + 1 })
     .eq('id', userProfile.id);
+
+  // 4. Send notification email
+  const { data: recipient } = await serviceRoleClient
+    .from('users')
+    .select('email, first_name')
+    .eq('id', toUserId)
+    .single();
+
+  if (recipient) {
+    await sendConnectionNotification(
+      recipient.email,
+      recipient.first_name,
+      userProfile.first_name,
+      'new_request'
+    );
+  }
 
   return { success: true };
 }

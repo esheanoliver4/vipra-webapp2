@@ -112,3 +112,49 @@ export async function sendAdminNotificationEmail(
     return false;
   }
 }
+export async function sendConnectionNotification(
+  recipientEmail: string,
+  recipientName: string,
+  senderName: string,
+  type: 'new_request' | 'request_accepted'
+) {
+  let subject = '';
+  let htmlContent = '';
+
+  if (type === 'new_request') {
+    subject = `New Connection Request from ${senderName}`;
+    htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #c41e3a;">You have a new connection request!</h2>
+        <p>Hi ${recipientName},</p>
+        <p><strong>${senderName}</strong> is interested in your profile and has sent you a connection request on VipraPariwar.</p>
+        <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/connections" style="background-color: #c41e3a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">View Request</a></p>
+        <p>Best regards,<br>VipraPariwar Team</p>
+      </div>
+    `;
+  } else {
+    subject = `${senderName} accepted your connection request!`;
+    htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #c41e3a;">Connection Accepted!</h2>
+        <p>Hi ${recipientName},</p>
+        <p>Great news! <strong>${senderName}</strong> has accepted your connection request. You can now start messaging each other.</p>
+        <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/messages" style="background-color: #c41e3a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Start Chatting</a></p>
+        <p>Best regards,<br>VipraPariwar Team</p>
+      </div>
+    `;
+  }
+
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM || `"VipraPariwar" <${process.env.EMAIL_USER}>`,
+      to: recipientEmail,
+      subject,
+      html: htmlContent,
+    });
+    return true;
+  } catch (error) {
+    console.error('[v0] Connection notification error:', error);
+    return false;
+  }
+}

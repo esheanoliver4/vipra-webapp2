@@ -5,11 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Users, AlertCircle, CheckCircle, XCircle, Eye, Trash2, Clock, Loader2, Power } from 'lucide-react';
+import { Users, AlertCircle, CheckCircle, XCircle, Eye, Trash2, Clock, Loader2, Power, CreditCard, Search, Filter } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
-import { approveUser, rejectUser, deleteUser, deactivateUser, getAdminStats } from '@/lib/actions/admin';
+import { approveUser, rejectUser, deleteUser, deactivateUser, getAdminStats, getAdminUsers } from '@/lib/actions/admin';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface AdminClientProps {
   userId: string;
@@ -31,6 +44,12 @@ interface User {
 export default function AdminClient({ userId }: AdminClientProps) {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [genderFilter, setGenderFilter] = useState('all');
+  const pageSize = 20;
   const router = useRouter();
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -42,7 +61,16 @@ export default function AdminClient({ userId }: AdminClientProps) {
 
   useEffect(() => {
     fetchAdminData();
-  }, []);
+  }, [currentPage, statusFilter, genderFilter]);
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (currentPage !== 1) setCurrentPage(1);
+      else fetchAdminData();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const fetchAdminData = async () => {
     try {
@@ -53,17 +81,13 @@ export default function AdminClient({ userId }: AdminClientProps) {
       setStats(statsData);
 
       // Fetch users data
-      const { data: usersData, error: usersError } = await supabase
-        .from('users')
-        .select('id, email, first_name, last_name, gender, payment_id, payment_status, approval_status, deactivated_at, created_at')
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (usersError) {
-        console.error('[v0] Error fetching users:', usersError);
+      const result = await getAdminUsers(currentPage, pageSize, searchQuery, statusFilter, genderFilter);
+      if (result.error) {
+        console.error('[v0] Error fetching users:', result.error);
         toast.error('Failed to load users data');
       } else {
-        setUsers(usersData || []);
+        setUsers(result.data || []);
+        setTotalUsers(result.totalCount || 0);
       }
     } catch (error) {
       console.error('[v0] Admin data fetch error:', error);
@@ -147,6 +171,33 @@ export default function AdminClient({ userId }: AdminClientProps) {
         <div className="text-center space-y-3">
           <h1 className="text-5xl font-black text-slate-900 tracking-tight">Admin Dashboard</h1>
           <p className="text-xl text-slate-500 font-medium">Manage user registrations and approvals</p>
+          
+          <div className="flex flex-wrap justify-center gap-4 mt-8">
+            <Button 
+              variant="outline" 
+              className="rounded-xl border-2 border-primary/20 hover:border-primary text-primary font-bold px-6 py-5 shadow-sm"
+              onClick={() => router.push('/admin/dashboard')}
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Users
+            </Button>
+            <Button 
+              variant="outline" 
+              className="rounded-xl border-2 border-primary/20 hover:border-primary text-primary font-bold px-6 py-5 shadow-sm"
+              onClick={() => router.push('/admin/payments')}
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              Payments
+            </Button>
+            <Button 
+              variant="outline" 
+              className="rounded-xl border-2 border-primary/20 hover:border-primary text-primary font-bold px-6 py-5 shadow-sm"
+              onClick={() => router.push('/admin/cms')}
+            >
+              <AlertCircle className="w-4 h-4 mr-2" />
+              CMS
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -290,15 +341,36 @@ export default function AdminClient({ userId }: AdminClientProps) {
                               <Eye className="w-4 h-4" />
                               View
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-2 border-slate-400 text-slate-600 hover:bg-slate-50 hover:text-black font-black gap-2 px-5 py-5 rounded-xl transition-all active:scale-95 shadow-sm"
-                              onClick={() => handleDelete(user.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              Remove
-                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-2 border-slate-400 text-slate-600 hover:bg-slate-50 hover:text-black font-black gap-2 px-5 py-5 rounded-xl transition-all active:scale-95 shadow-sm"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Remove
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="rounded-3xl border-none">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="text-2xl font-black">Remove User?</AlertDialogTitle>
+                                  <AlertDialogDescription className="text-slate-500 font-medium">
+                                    This action cannot be undone. This will permanently delete the user's 
+                                    profile and their authentication account.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter className="gap-2">
+                                  <AlertDialogCancel className="rounded-xl font-bold border-slate-200">Cancel</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => handleDelete(user.id)}
+                                    className="rounded-xl font-bold bg-red-600 hover:bg-red-700 text-white"
+                                  >
+                                    Confirm Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -317,6 +389,33 @@ export default function AdminClient({ userId }: AdminClientProps) {
                   )}
                 </TableBody>
               </Table>
+            </div>
+            
+            {/* Pagination Controls */}
+            <div className="p-6 border-t border-slate-100 flex items-center justify-between">
+              <p className="text-sm text-slate-500 font-medium">
+                Showing <span className="font-bold text-slate-900">{(currentPage - 1) * pageSize + 1}</span> to <span className="font-bold text-slate-900">{Math.min(currentPage * pageSize, totalUsers)}</span> of <span className="font-bold text-slate-900">{totalUsers}</span> users
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="rounded-xl border-slate-200 font-bold"
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  disabled={currentPage * pageSize >= totalUsers}
+                  className="rounded-xl border-slate-200 font-bold"
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
